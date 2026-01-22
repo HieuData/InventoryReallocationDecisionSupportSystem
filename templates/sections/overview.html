@@ -1,0 +1,55 @@
+<section class="section-overview">
+    <h2>📊 Tổng quan Cửa hàng & Kho</h2>
+    
+    <div class="tables-row">
+        <!-- Store Profiles -->
+        <div class="table-container">
+            <h3>Cửa hàng</h3>
+            <div class="layer-tabs">
+                <button class="layer-btn active" data-layer="profiles">Tình trạng Cửa hàng</button>
+                <button class="layer-btn" data-layer="ma-hang">Mã hàng</button>
+                <button class="layer-btn" data-layer="skc">SKC</button>
+                <button class="layer-btn" data-layer="sku">SKU</button>
+            </div>
+            <div class="layer-content">
+                <div id="layer-profiles" class="layer-pane active">
+                    <table id="table-profiles" class="display"></table>
+                </div>
+                <div id="layer-ma-hang" class="layer-pane">
+                    <input type="text" id="store-id-ma-hang" placeholder="Nhập Store ID...">
+                    <table id="table-ma-hang" class="display"></table>
+                </div>
+                <div id="layer-skc" class="layer-pane">
+                    <input type="text" id="store-id-skc" placeholder="Nhập Store ID...">
+                    <table id="table-skc" class="display"></table>
+                </div>
+                <div id="layer-sku" class="layer-pane">
+                    <input type="text" id="store-id-sku" placeholder="Nhập Store ID...">
+                    <table id="table-sku" class="display"></table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kho -->
+        <div class="table-container">
+            <h3>Kho</h3>
+            <div class="layer-tabs">
+                <button class="layer-btn active" data-layer="wh-ma-hang">Mã hàng</button>
+                <button class="layer-btn" data-layer="wh-skc">SKC</button>
+                <button class="layer-btn" data-layer="wh-sku">SKU</button>
+            </div>
+            <div class="layer-content">
+                <div id="layer-wh-ma-hang" class="layer-pane active">
+                    <table id="table-wh-ma-hang" class="display"></table>
+                </div>
+                <div id="layer-wh-skc" class="layer-pane">
+                    <table id="table-wh-skc" class="display"></table>
+                </div>
+                <div id="layer-wh-sku" class="layer-pane">
+                    <input type="text" id="skc-input-wh" placeholder="Nhập SKC...">
+                    <table id="table-wh-sku" class="display"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

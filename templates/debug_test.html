@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Debug Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .input-group input {
+            width: 300px;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .input-group button {
+            padding: 8px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .input-group button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left-color: #28a745;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #ffe6e6;
+        }
+        .info {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>🔍 API Debug Test Page</h1>
+
+    <div class="info">
+        <strong>Instructions:</strong> Upload your data files first via the main app, then test the APIs below. Check the browser console (F12) for detailed logs.
+    </div>
+
+    <!-- Test 1: Size Range -->
+    <div class="test-section">
+        <h2>1️⃣ Size Range API</h2>
+        <p>Tests: <code>/api/broken/size_range/&lt;skc&gt;</code></p>
+        <div class="input-group">
+            <label>Enter SKC (e.g., 7000005Xanh):</label>
+            <input type="text" id="skc-size-range" placeholder="Enter SKC...">
+            <button onclick="testSizeRange()">Test API</button>
+        </div>
+        <div id="result-size-range" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 2: Top Stores -->
+    <div class="test-section">
+        <h2>2️⃣ Top Stores API</h2>
+        <p>Tests: <code>/api/broken/top_stores/&lt;skc&gt;</code></p>
+        <div class="input-group">
+            <label>Enter SKC:</label>
+            <input type="text" id="skc-top-stores" placeholder="Enter SKC...">
+            <button onclick="testTopStores()">Test API</button>
+        </div>
+        <div id="result-top-stores" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 3: Warehouse SKU -->
+    <div class="test-section">
+        <h2>3️⃣ Warehouse SKU API (Overview)</h2>
+        <p>Tests: <code>/api/overview/warehouse_sku/&lt;skc&gt;</code></p>
+        <div class="input-group">
+            <label>Enter SKC:</label>
+            <input type="text" id="skc-wh-sku" placeholder="Enter SKC...">
+            <button onclick="testWarehouseSKU()">Test API</button>
+        </div>
+        <div id="result-wh-sku" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 4: Warehouse SKU After -->
+    <div class="test-section">
+        <h2>4️⃣ Warehouse SKU After API</h2>
+        <p>Tests: <code>/api/after_effect/warehouse_sku/&lt;skc&gt;</code></p>
+        <div class="input-group">
+            <label>Enter SKC:</label>
+            <input type="text" id="skc-wh-sku-after" placeholder="Enter SKC...">
+            <button onclick="testWarehouseSKUAfter()">Test API</button>
+        </div>
+        <div id="result-wh-sku-after" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 5: Available SKCs -->
+    <div class="test-section">
+        <h2>5️⃣ Available SKCs</h2>
+        <p>Tests: <code>/api/overview/warehouse_skc</code></p>
+        <div class="input-group">
+            <button onclick="testAvailableSKCs()">Get Available SKCs</button>
+        </div>
+        <div id="result-available-skcs" class="result" style="display:none;"></div>
+    </div>
+
+    <!-- Test 6: Data Status -->
+    <div class="test-section">
+        <h2>6️⃣ Data Upload Status</h2>
+        <p>Tests: <code>/api/data_status</code></p>
+        <div class="input-group">
+            <button onclick="testDataStatus()">Check Data Status</button>
+        </div>
+        <div id="result-data-status" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        console.log('Debug Test Page Loaded');
+
+        function showResult(resultId, data, isSuccess) {
+            const resultDiv = $('#' + resultId);
+            resultDiv.show();
+            resultDiv.removeClass('success error');
+            resultDiv.addClass(isSuccess ? 'success' : 'error');
+            resultDiv.text(JSON.stringify(data, null, 2));
+        }
+
+        function testSizeRange() {
+            const skc = $('#skc-size-range').val().trim();
+            if (!skc) {
+                alert('Please enter a SKC');
+                return;
+            }
+
+            console.log('Testing Size Range API with SKC:', skc);
+            $.get('/api/broken/size_range/' + skc)
+                .done(function(data) {
+                    console.log('✅ Size Range Success:', data);
+                    showResult('result-size-range', data, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Size Range Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-size-range', errorData, false);
+                });
+        }
+
+        function testTopStores() {
+            const skc = $('#skc-top-stores').val().trim();
+            if (!skc) {
+                alert('Please enter a SKC');
+                return;
+            }
+
+            console.log('Testing Top Stores API with SKC:', skc);
+            $.get('/api/broken/top_stores/' + skc)
+                .done(function(data) {
+                    console.log('✅ Top Stores Success:', data);
+                    showResult('result-top-stores', data, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Top Stores Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-top-stores', errorData, false);
+                });
+        }
+
+        function testWarehouseSKU() {
+            const skc = $('#skc-wh-sku').val().trim();
+            if (!skc) {
+                alert('Please enter a SKC');
+                return;
+            }
+
+            console.log('Testing Warehouse SKU API with SKC:', skc);
+            $.get('/api/overview/warehouse_sku/' + skc)
+                .done(function(data) {
+                    console.log('✅ Warehouse SKU Success:', data);
+                    showResult('result-wh-sku', data, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Warehouse SKU Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-wh-sku', errorData, false);
+                });
+        }
+
+        function testWarehouseSKUAfter() {
+            const skc = $('#skc-wh-sku-after').val().trim();
+            if (!skc) {
+                alert('Please enter a SKC');
+                return;
+            }
+
+            console.log('Testing Warehouse SKU After API with SKC:', skc);
+            $.get('/api/after_effect/warehouse_sku/' + skc)
+                .done(function(data) {
+                    console.log('✅ Warehouse SKU After Success:', data);
+                    showResult('result-wh-sku-after', data, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Warehouse SKU After Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-wh-sku-after', errorData, false);
+                });
+        }
+
+        function testAvailableSKCs() {
+            console.log('Testing Available SKCs API');
+            $.get('/api/overview/warehouse_skc')
+                .done(function(data) {
+                    console.log('✅ Available SKCs Success:', data);
+                    // Extract just SKCs for easier viewing
+                    const skcs = data.map(item => item.SKC || item['Mã màu']);
+                    const result = {
+                        total_count: data.length,
+                        sample_skcs: skcs.slice(0, 20),
+                        full_data_sample: data.slice(0, 5)
+                    };
+                    showResult('result-available-skcs', result, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Available SKCs Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-available-skcs', errorData, false);
+                });
+        }
+
+        function testDataStatus() {
+            console.log('Testing Data Status API');
+            $.get('/api/data_status')
+                .done(function(data) {
+                    console.log('✅ Data Status Success:', data);
+                    showResult('result-data-status', data, true);
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('❌ Data Status Failed:', status, error);
+                    const errorData = {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        error: error,
+                        response: xhr.responseText
+                    };
+                    showResult('result-data-status', errorData, false);
+                });
+        }
+
+        // Auto-test data status on load
+        $(document).ready(function() {
+            testDataStatus();
+        });
+    </script>
+</body>
+</html>

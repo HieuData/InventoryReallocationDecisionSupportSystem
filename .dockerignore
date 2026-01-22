@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Flask
+flask_session/
+instance/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unused files
+Unused/
+
+# Test files
+test_*.py
+*_test.py
+
+# Documentation
+*.md
+README*
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml

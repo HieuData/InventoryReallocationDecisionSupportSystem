@@ -1,0 +1,99 @@
+<section class="section-reallocation">
+    <h2>📦 Mô hình hóa kế hoạch điều chuyển</h2>
+    
+    <div class="run-section">
+        <button id="btn-run-optimization" class="btn btn-primary">
+            🚀 Chạy Mô hình
+        </button>
+        <span id="run-status"></span>
+    </div>
+    
+    <div class="results-container">
+        <!-- Summary -->
+        <div class="subsection">
+            <h3>Tóm tắt Kết quả</h3>
+            <div class="summary-box">
+                <div id="summary-content">
+                    <p class="placeholder">Chưa có kết quả. Bấm Run Optimization.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Kế hoạch Điều chuyển -->
+        <div class="subsection">
+            <h3>Kế hoạch Điều chuyển</h3>
+            <div class="table-container full-width">
+                <table id="table-reallocation" class="display"></table>
+            </div>
+        </div>
+
+        <!-- Audit Section: Transfers -->
+        <div class="audit-section">
+            <h3>Chi tiết điều chuyển</h3>
+            <!-- Audit Panels - Side by Side -->
+            <div class="tables-row">
+                <!-- Left: Warehouse Transfers -->
+                <div class="table-container">
+                    <h3>Điều chuyển từ kho</h3>
+                    <table id="table-warehouse-transfers" class="display"></table>
+                </div>
+
+                <!-- Right: Store Transfers -->
+                <div class="table-container">
+                    <h3>Điều chuyển từ cửa hàng</h3>
+                    <table id="table-store-transfers" class="display"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit Panel 3: Transport Constraints (Split) -->
+        <div class="subsection audit-panel">
+            <h3>Ràng buộc vận chuyển</h3>
+            <div class="tables-row">
+                <!-- Left: Source → Destinations -->
+                <div class="table-container">
+                    <h4>Nguồn → Số Đích</h4>
+                    <table id="table-source-destinations" class="display"></table>
+                </div>
+
+                <!-- Right: Destination ← Sources -->
+                <div class="table-container">
+                    <h4>Đích ← Số Nguồn</h4>
+                    <table id="table-destination-sources" class="display"></table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensitivity Analysis -->
+        <div class="subsection">
+            <h3>Phân tích độ nhạy</h3>
+            <div class="sensitivity-container">
+                <div class="sensitivity-tabs">
+                    <button class="sens-btn" data-sens="1">Variables</button>
+                    <button class="sens-btn" data-sens="2">Constraints</button>
+                    <button class="sens-btn" data-sens="3">By Type</button>
+                    <button class="sens-btn" data-sens="6">Supply Util</button>
+                    <button class="sens-btn" data-sens="7">Demand Fulfill</button>
+                    <button class="sens-btn" data-sens="8">Warehouse Util</button>
+                </div>
+                <div id="sensitivity-content">
+                    <p class="placeholder">Chọn tab để xem chi tiết</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnostics -->
+        <div class="subsection">
+            <h3>Kiểm tra Mô hình</h3>
+            <div class="diagnostics-container">
+                <div class="diagnostics-buttons">
+                    <button id="btn-check-unused" class="btn btn-secondary">🔍 Check Unused Variables</button>
+                    <button id="btn-check-violated" class="btn btn-secondary">⚠️ Check Violated Constraints</button>
+                    <button id="btn-export-lp" class="btn btn-secondary">💾 Export Model (.lp)</button>
+                </div>
+                <div id="diagnostics-content">
+                    <p class="placeholder">Bấm button để xem chi tiết</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

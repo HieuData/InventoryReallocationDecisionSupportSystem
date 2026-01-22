@@ -1,0 +1,671 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.sidebar h2 {
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.sidebar h3 {
+    font-size: 0.95rem;
+    margin: 15px 0 10px;
+    color: #ecf0f1;
+}
+
+.config-section {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #34495e;
+}
+
+.sidebar label {
+    display: block;
+    font-size: 0.85rem;
+    margin: 8px 0 4px;
+    color: #bdc3c7;
+}
+
+.sidebar input, .sidebar select {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.sidebar input[type="file"] {
+    padding: 5px;
+    background: #34495e;
+    color: white;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 280px;
+    flex: 1;
+    padding: 20px;
+    max-width: calc(100vw - 280px);
+    overflow-x: visible;  /* ✅ THAY ĐỔI */
+    position: relative;
+    z-index: 1;
+}
+
+/* Tabs */
+.tabs {
+    position: sticky;    /* ← THÊM */
+    top: 0;             /* ← THÊM */
+    z-index: 100;       /* ← THÊM (hoặc tăng giá trị hiện tại) */
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: none;
+    background: #ecf0f1;
+    cursor: pointer;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.tab-btn:hover {
+    background: #3498db;
+    color: white;
+}
+
+.tab-btn.active {
+    background: #2980b9;
+    color: white;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Tables */
+.tables-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.tables-row.three-cols .table-container {
+    flex: 1;
+}
+
+.table-container {
+    flex: 1;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    max-height: 600px;
+    overflow: visible;  /* Container does NOT scroll - only data area scrolls */
+    position: relative;
+    margin-top: 15px;
+}
+
+/* Larger tables for Overview section (only 2 tables) */
+.section-overview .table-container {
+    max-height: 75vh;
+}
+
+.table-container.full-width {
+    width: 100%;
+}
+
+.table-container h3, .table-container h4 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+    flex-shrink: 0;
+}
+
+.table-container input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+/* Layer Tabs */
+.layer-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-shrink: 0;  /* Don't shrink, fixed height */
+}
+
+.layer-btn {
+    padding: 5px 12px;
+    border: 1px solid #3498db;
+    background: white;
+    color: #3498db;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 0.85rem;
+}
+
+.layer-btn.active {
+    background: #3498db;
+    color: white;
+}
+
+.layer-content {
+    flex: 1 1 auto;  /* Grow to fill available space */
+    display: flex;
+    flex-direction: column;
+    min-height: 0;  /* Allow shrinking below content size */
+    overflow: hidden;  /* Prevent overflow */
+}
+
+.layer-pane {
+    display: none;
+    flex: 1 1 auto;  /* Fill parent when active */
+    min-height: 0;
+}
+
+.layer-pane.active {
+    display: flex;  /* Use flex when active */
+    flex-direction: column;
+}
+
+/* Split Box */
+.split-box {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;  /* Fill available space */
+    min-height: 0;
+}
+
+.split-top, .split-bottom {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;  /* Don't scroll - let children handle it */
+}
+
+.split-top {
+    border-bottom: none;
+    background: #f8f9fa;
+}
+
+.split-top h4, .split-bottom h4 {
+    flex-shrink: 0;
+    margin-bottom: 10px;
+}
+
+/* Size range display in split-top */
+#size-range-display {
+    flex: 1 1 auto;
+    overflow: auto;  /* This can scroll */
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 100px;
+}
+
+/* Top 3 Stores table in split-bottom */
+.split-bottom .dataTables_wrapper {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;  /* Fill available space */
+    max-height: 100%;  /* Don't exceed parent */
+}
+
+/* Top controls in split-bottom */
+.split-bottom .dataTables_wrapper .top {
+    flex-shrink: 0;
+    height: 35px;  /* Slightly smaller for compact space */
+    min-height: 35px;
+}
+
+/* Data area for split-bottom */
+.split-bottom .dataTables_scroll {
+    flex: 1 1 auto;
+    min-height: 80px;  /* Minimum scrollable area */
+    max-height: 120px !important;  /* Fixed small height for Top 3 Stores */
+}
+
+/* Bottom controls in split-bottom */
+.split-bottom .dataTables_wrapper .bottom {
+    flex-shrink: 0;
+    height: 35px;  /* Slightly smaller for compact space */
+    min-height: 35px;
+    display: flex !important;  /* Always visible */
+    visibility: visible !important;
+}
+
+/* Force pagination always visible in Top 3 Stores */
+.split-bottom .dataTables_paginate {
+    display: flex !important;  /* Always show pagination */
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure Info text is visible */
+.split-bottom .dataTables_info {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Enable horizontal scrollbar for Top 3 Stores */
+.split-bottom .dataTables_scroll {
+    overflow-x: auto !important;  /* Force horizontal scrollbar */
+    overflow-y: auto !important;  /* Keep vertical scrollbar */
+}
+
+/* Override DataTables inline styles for Top 3 Stores pagination */
+.split-bottom .dataTables_paginate span,
+.split-bottom .dataTables_paginate .paginate_button {
+    display: inline-block !important;  /* Force visible even with few records */
+}
+
+/* Show at least Previous/Next even when disabled */
+.split-bottom .dataTables_paginate .paginate_button.previous,
+.split-bottom .dataTables_paginate .paginate_button.next {
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+/* Inactive state styling for pagination */
+.split-bottom .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.4 !important;  /* Dimmed but visible */
+    cursor: not-allowed !important;
+    background: #f5f5f5 !important;
+}
+
+/* Broken Analysis section - three columns layout needs smaller data areas */
+.section-broken .table-container .dataTables_scroll {
+    max-height: 320px !important;  /* For Broken by Store and Broken by SKC */
+}
+
+/* Override for Top 3 Stores - even smaller because it's in split-bottom */
+.section-broken .split-bottom .dataTables_scroll {
+    max-height: 120px !important;  /* Smaller for half-height container */
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    margin-top: 15px;
+    background: #27ae60;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.btn-primary:hover {
+    background: #219a52;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Alert */
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+/* Summary Box */
+.summary-box {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.summary-box h3 {
+    margin-bottom: 10px;
+}
+
+#summary-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+}
+
+.summary-item {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.summary-item .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2980b9;
+}
+
+.summary-item .label {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Sensitivity */
+.sensitivity-container {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.sensitivity-tabs {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.sens-btn {
+    padding: 8px 15px;
+    border: 1px solid #9b59b6;
+    background: white;
+    color: #9b59b6;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 0.85rem;
+}
+
+.sens-btn.active {
+    background: #9b59b6;
+    color: white;
+}
+
+/* Placeholder */
+.placeholder {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Status */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.status-dot.red { background: #e74c3c; }
+.status-dot.green { background: #27ae60; }
+.status-dot.orange { background: #f39c12; }
+
+/* DataTables Override */
+.dataTables_wrapper {
+    font-size: 0.9rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;  /* Take full available height */
+    max-height: 100%;  /* Don't exceed container */
+}
+
+/* Top controls (length menu, search) - NO scroll */
+.dataTables_wrapper .top {
+    flex-shrink: 0;  /* Fixed size, don't shrink */
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;  /* Fixed height */
+}
+
+/* Data scroll container - THIS is where scrolling happens */
+.dataTables_wrapper .dataTables_scroll {
+    flex: 1 1 auto;  /* Grow and shrink as needed */
+    overflow: auto !important;  /* Both horizontal and vertical scrollbars HERE */
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    min-height: 200px;  /* Minimum height */
+    max-height: calc(100% - 100px);  /* Leave space for top and bottom controls */
+}
+
+/* Header inside scroll area */
+.dataTables_wrapper .dataTables_scrollHead {
+    overflow: visible !important;
+}
+
+.dataTables_wrapper .dataTables_scrollHead table {
+    width: 100% !important;
+}
+
+/* Body with actual data */
+.dataTables_wrapper .dataTables_scrollBody {
+    overflow: visible !important;  /* Parent .dataTables_scroll handles scrolling */
+}
+
+.dataTables_wrapper .dataTables_scrollBody table {
+    width: 100% !important;
+}
+
+table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+}
+
+table.dataTable thead th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #ddd;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 8px;
+}
+
+table.dataTable tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Bottom controls (info, pagination) - NO scroll */
+.dataTables_wrapper .bottom {
+    flex-shrink: 0;  /* Fixed size, don't shrink */
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px;  /* Fixed height */
+    min-height: 40px;  /* Ensure minimum height */
+}
+
+/* DataTables pagination styling */
+.dataTables_paginate {
+    margin: 0 !important;  /* Remove margin - parent .bottom handles spacing */
+    display: flex !important;  /* Ensure visible */
+    gap: 5px;
+    justify-content: flex-end;  /* Align to right in .bottom */
+    flex-wrap: wrap;
+}
+
+.dataTables_paginate .paginate_button {
+    padding: 5px 12px !important;
+    margin: 2px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    background: white !important;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: #f0f0f0 !important;
+    border-color: #999 !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #3498db !important;
+    color: white !important;
+    border-color: #3498db !important;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* DataTables info and length styling */
+.dataTables_info, .dataTables_length {
+    margin: 10px 0;
+    flex-shrink: 0;
+}
+
+.dataTables_length {
+    order: -1;
+}
+
+/* Fixed footer area for pagination and info */
+.dataTables_wrapper > .dataTables_info,
+.dataTables_wrapper > .dataTables_paginate {
+    flex-shrink: 0;
+    background: white;
+    padding: 10px 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+/* Subsection */
+.subsection {
+    margin-top: 15px;
+    margin-bottom: 30px;
+}
+
+.subsection h3 {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+}
+
+/* Run Section */
+.run-section {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#run-status {
+    font-weight: 500;
+}
+
+/* Diagnostics */
+.diagnostics-container {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 2px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.diagnostics-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+/* Sticky header cho DataTables */
+.dataTables_wrapper .dataTables_scrollHead {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    background: white !important;
+}
+
+.dataTables_wrapper .dataTables_scrollHead table thead th {
+    position: sticky !important;
+    top: 0 !important;
+    background: #f8f9fa !important;
+    z-index: 10 !important;
+}
+
+/* Audit Section Headers */
+.audit-section {
+    margin-bottom: 20px;
+}
+
+.audit-section > h3 {
+    margin-bottom: 15px;
+    margin-top: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+}
+

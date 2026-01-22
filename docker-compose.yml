@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: inventory_optimization
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount session data for persistence
+      - ./flask_session:/app/flask_session
+      # Mount output folder for optimization results
+      - ./output:/app/output
+    environment:
+      - FLASK_APP=app.py
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

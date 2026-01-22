@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .log-success { color: green; }
+        .log-error { color: red; }
+        .log-info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Upload Test Page</h1>
+
+    <div class="section">
+        <h2>1. Upload Files</h2>
+        <label>Store Files:</label><br>
+        <input type="file" id="store-files" multiple accept=".csv"><br><br>
+
+        <label>Warehouse Files:</label><br>
+        <input type="file" id="warehouse-files" multiple accept=".csv"><br><br>
+
+        <label>Season:</label>
+        <select id="season">
+            <option value="false">Season has not come</option>
+            <option value="true">Season has come</option>
+        </select><br><br>
+
+        <button onclick="uploadFiles()">Upload</button>
+    </div>
+
+    <div class="section">
+        <h2>2. Check Status</h2>
+        <button onclick="checkStatus()">Check Status</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Load Store Profiles</h2>
+        <button onclick="loadProfiles()">Load Profiles</button>
+    </div>
+
+    <div class="section">
+        <h2>4. Clear All</h2>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <div class="section">
+        <h2>Debug Log</h2>
+        <div id="log"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `<div class="log-entry log-${type}">[${timestamp}] ${message}</div>`;
+            $('#log').append(entry);
+            $('#log').scrollTop($('#log')[0].scrollHeight);
+        }
+
+        function clearLog() {
+            $('#log').empty();
+            log('Log cleared', 'info');
+        }
+
+        function uploadFiles() {
+            const storeFiles = $('#store-files')[0].files;
+            const warehouseFiles = $('#warehouse-files')[0].files;
+
+            if (storeFiles.length === 0 || warehouseFiles.length === 0) {
+                log('Please select both store and warehouse files', 'error');
+                return;
+            }
+
+            log(`Uploading ${storeFiles.length} store file(s) and ${warehouseFiles.length} warehouse file(s)...`, 'info');
+
+            const formData = new FormData();
+            for (let i = 0; i < storeFiles.length; i++) {
+                formData.append('store_files', storeFiles[i]);
+                log(`Added store file: ${storeFiles[i].name}`, 'info');
+            }
+            for (let i = 0; i < warehouseFiles.length; i++) {
+                formData.append('warehouse_files', warehouseFiles[i]);
+                log(`Added warehouse file: ${warehouseFiles[i].name}`, 'info');
+            }
+            formData.append('season', $('#season').val());
+
+            $.ajax({
+                url: '/api/upload/files',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    log('Upload successful!', 'success');
+                    log(`Response: ${JSON.stringify(response, null, 2)}`, 'success');
+                },
+                error: function(xhr) {
+                    log('Upload failed!', 'error');
+                    log(`Error: ${xhr.status} - ${JSON.stringify(xhr.responseJSON)}`, 'error');
+                }
+            });
+        }
+
+        function checkStatus() {
+            log('Checking status...', 'info');
+            $.get('/api/upload/status', function(response) {
+                log('Status response:', 'success');
+                log(JSON.stringify(response, null, 2), 'success');
+            }).fail(function(xhr) {
+                log('Status check failed!', 'error');
+                log(`Error: ${xhr.status}`, 'error');
+            });
+        }
+
+        function loadProfiles() {
+            log('Loading store profiles...', 'info');
+            $.get('/api/overview/store_profiles', function(response) {
+                log(`Loaded ${response.length} profiles`, 'success');
+                log(`First profile: ${JSON.stringify(response[0], null, 2)}`, 'success');
+            }).fail(function(xhr) {
+                log('Failed to load profiles!', 'error');
+                log(`Error: ${xhr.status} - ${JSON.stringify(xhr.responseJSON)}`, 'error');
+            });
+        }
+
+        // Initial log
+        log('Test page loaded. Ready to test.', 'info');
+    </script>
+</body>
+</html>

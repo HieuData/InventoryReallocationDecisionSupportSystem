@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Optimization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+    <div class="container">
+        {% include 'components/sidebar.html' %}
+        
+        <main class="main-content">
+            <nav class="tabs">
+                <button class="tab-btn active" data-tab="overview">Tổng quan Cửa hàng & Kho</button>
+                <button class="tab-btn" data-tab="product">Tổng quan Sản phẩm</button>
+                <button class="tab-btn" data-tab="broken">Phân tích Gãy Size</button>
+                <button class="tab-btn" data-tab="reallocation">Điều chuyển</button>
+                <button class="tab-btn" data-tab="after-effect">Tác động</button>
+            </nav>
+            
+            <div class="tab-content">
+                <div id="overview" class="tab-pane active">
+                    {% include 'sections/overview.html' %}
+                </div>
+                <div id="product" class="tab-pane">
+                    {% include 'sections/product.html' %}
+                </div>
+                <div id="broken" class="tab-pane">
+                    {% include 'sections/broken.html' %}
+                </div>
+                <div id="reallocation" class="tab-pane">
+                    {% include 'sections/reallocation.html' %}
+                </div>
+                <div id="after-effect" class="tab-pane">
+                    {% include 'sections/after_effect.html' %}
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

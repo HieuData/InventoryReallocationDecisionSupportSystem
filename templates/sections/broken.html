@@ -1,0 +1,54 @@
+<section class="section-broken">
+    <h2>🔴 Broken Analysis</h2>
+    
+    <div class="tables-row three-cols">
+        <!-- Bảng 1: Reference -->
+        <div class="table-container">
+            <h3>Đối chiếu</h3>
+            <div class="split-box">
+                <div class="split-top">
+                    <h4>Dải Size tại Kho</h4>
+                    <input type="text" id="skc-input-reference" placeholder="Nhập SKC...">
+                    <div id="size-range-display">
+                        <p class="placeholder">Nhập SKC để xem dải size chuẩn</p>
+                    </div>
+                </div>
+                <div class="split-bottom">
+                    <h4>Top 3 Cửa hàng bán chạy theo Phân loại SKC</h4>
+                    <table id="table-top-stores" class="display compact"></table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bảng 2: Broken by Store -->
+        <div class="table-container">
+            <h3>Gãy Size theo Cửa hàng</h3>
+            <div class="layer-tabs">
+                <button class="layer-btn active" data-layer="broken-store">Theo Cửa hàng</button>
+                <button class="layer-btn" data-layer="broken-skc-detail">Chi tiết SKC theo Cửa hàng</button>
+            </div>
+            <input type="text" id="store-id-broken" placeholder="Nhập Store ID...">
+            <div class="layer-content">
+                <div id="layer-broken-store" class="layer-pane active">
+                    <table id="table-broken-store" class="display"></table>
+                </div>
+                <div id="layer-broken-skc-detail" class="layer-pane">
+                    <table id="table-broken-skc-detail" class="display"></table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bảng 3: Broken by SKC -->
+        <div class="table-container">
+            <h3>Gãy Size theo SKC</h3>
+            <input type="text" id="skc-input-broken" placeholder="Nhập SKC...">
+            <div style="margin-top: 10px;">
+                <label for="store-filter-broken">Lọc theo cửa hàng:</label>
+                <select id="store-filter-broken">
+                    <option value="all">Tất cả</option>
+                </select>
+            </div>
+            <table id="table-broken-by-skc" class="display"></table>
+        </div>
+    </div>
+</section>

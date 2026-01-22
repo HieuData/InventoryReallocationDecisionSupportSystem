@@ -1,0 +1,96 @@
+<section class="section-after">
+    <h2>📈 Tác động sau điều chuyển</h2>
+
+    <div id="after-warning" class="alert alert-warning">
+        ⚠️ Chưa có dữ liệu. Vui lòng chạy Optimization trước.
+    </div>
+
+    <div id="after-content" style="display: none;">
+        <!-- Phần 1: Store & Warehouse After -->
+        <div class="subsection">
+            <h3>Cửa hàng & Kho Sau điều chuyển</h3>
+            <div class="tables-row">
+                <!-- Store After with 4 layers -->
+                <div class="table-container">
+                    <h4>Cửa hàng (Sau điều chuyển)</h4>
+                    <div class="layer-tabs">
+                        <button class="layer-btn active" data-layer="profiles-after">Profiles</button>
+                        <button class="layer-btn" data-layer="ma-hang-after">Mã hàng</button>
+                        <button class="layer-btn" data-layer="skc-after">SKC</button>
+                        <button class="layer-btn" data-layer="sku-after">SKU</button>
+                    </div>
+
+                    <div class="layer-content">
+                        <!-- Layer 1: Profiles -->
+                        <div id="layer-profiles-after" class="layer-pane active">
+                            <table id="table-profiles-after" class="display"></table>
+                        </div>
+
+                        <!-- Layer 2: Mã hàng by Store -->
+                        <div id="layer-ma-hang-after" class="layer-pane">
+                            <input type="text" id="store-id-ma-hang-after" placeholder="Nhập Store ID...">
+                            <table id="table-ma-hang-after" class="display"></table>
+                        </div>
+
+                        <!-- Layer 3: SKC by Store -->
+                        <div id="layer-skc-after" class="layer-pane">
+                            <input type="text" id="store-id-skc-after" placeholder="Nhập Store ID...">
+                            <table id="table-skc-after" class="display"></table>
+                        </div>
+
+                        <!-- Layer 4: SKU by Store -->
+                        <div id="layer-sku-after" class="layer-pane">
+                            <input type="text" id="store-id-sku-after" placeholder="Nhập Store ID...">
+                            <table id="table-sku-after" class="display"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kho After with 3 layers -->
+                <div class="table-container">
+                    <h4>Kho (Sau điều chuyển)</h4>
+                    <div class="layer-tabs">
+                        <button class="layer-btn active" data-layer="wh-ma-hang-after">Mã hàng</button>
+                        <button class="layer-btn" data-layer="wh-skc-after">SKC</button>
+                        <button class="layer-btn" data-layer="wh-sku-after">SKU</button>
+                    </div>
+
+                    <div class="layer-content">
+                        <!-- Layer 1: Mã hàng -->
+                        <div id="layer-wh-ma-hang-after" class="layer-pane active">
+                            <table id="table-wh-ma-hang-after" class="display"></table>
+                        </div>
+
+                        <!-- Layer 2: SKC -->
+                        <div id="layer-wh-skc-after" class="layer-pane">
+                            <table id="table-wh-skc-after" class="display"></table>
+                        </div>
+
+                        <!-- Layer 3: SKU by SKC -->
+                        <div id="layer-wh-sku-after" class="layer-pane">
+                            <input type="text" id="skc-input-wh-after" placeholder="Nhập SKC...">
+                            <table id="table-wh-sku-after" class="display"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần 2: Broken After -->
+        <div class="subsection">
+            <h3>Broken Index (Trước và Sau điều chuyển)</h3>
+            <div class="tables-row">
+                <div class="table-container">
+                    <h4>Theo Cửa hàng</h4>
+                    <input type="text" id="store-id-broken-after" placeholder="Nhập Store ID...">
+                    <table id="table-broken-after" class="display"></table>
+                </div>
+                <div class="table-container">
+                    <h4>Theo SKC</h4>
+                    <input type="text" id="skc-input-broken-after" placeholder="Nhập SKC...">
+                    <table id="table-broken-skc-after" class="display"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
