@@ -7,7 +7,7 @@ from datetime import timedelta
 app = Flask(__name__)
 
 # Session configuration
-app.secret_key = 'your-secret-key-here-change-in-production-make-it-long-and-random'
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your-secret-key-here-change-in-production-make-it-long-and-random')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
 # Configure Flask-Session for server-side sessions
@@ -35,6 +35,7 @@ app.register_blueprint(reallocation.bp)
 app.register_blueprint(after_effect.bp)
 app.register_blueprint(upload.bp)
 app.register_blueprint(product.bp)
+# app.register_blueprint(data.bp)
 
 @app.route('/')
 def index():

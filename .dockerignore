@@ -9,8 +9,10 @@ venv/
 ENV/
 env/
 
-# Flask
+# Flask - don't copy to image, will be mounted as volumes
 flask_session/
+uploads/
+output/
 instance/
 
 # IDE
@@ -42,3 +44,7 @@ README*
 Dockerfile
 .dockerignore
 docker-compose.yml
+
+# Environment
+.env
+.env.local

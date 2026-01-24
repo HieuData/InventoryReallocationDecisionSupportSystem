@@ -1,4 +1,4 @@
-# Inventory Optimization — Streamlit Deployment
+# Inventory Optimization — Flask Deployment
 
 Quick instructions to run the project locally or deploy to Streamlit Cloud.
 

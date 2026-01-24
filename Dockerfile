@@ -19,8 +19,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create directories for Flask-Session and output
-RUN mkdir -p flask_session output
+# Create directories for uploads, flask_session and output
+RUN mkdir -p uploads flask_session output
 
 # Expose port
 EXPOSE 5000

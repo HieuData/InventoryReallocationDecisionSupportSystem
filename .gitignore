@@ -1,1 +1,42 @@
+# Claude AI
 .claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Flask
+flask_session/
+instance/
+
+# Application data folders
+uploads/
+output/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test_*.py
+*_test.py
+
+# Logs
+*.log

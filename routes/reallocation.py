@@ -147,6 +147,7 @@ def warehouse_transfers():
     realloc_plan = pd.DataFrame(session['reallocation_plan'])
     df_warehouse = pd.DataFrame(session['df_warehouse'])
     df_stores = pd.DataFrame(session['df_stores'])
+    store_profiles = pd.DataFrame(session['store_profiles'])
 
     # Filter warehouse transfers
     wh_transfers = realloc_plan[realloc_plan['Loại'] == 'Chuyển từ kho'].copy()
@@ -157,6 +158,13 @@ def warehouse_transfers():
     # Drop Loại column
     wh_transfers = wh_transfers.drop(columns=['Loại'])
 
+    # Add category from warehouse data
+    wh_transfers = wh_transfers.merge(
+        df_warehouse[['SKU_ID', 'Mã hàng', 'Phân loại']].drop_duplicates(),
+        on='SKU_ID',
+        how='left'
+    )
+
     # Merge warehouse stock
     wh_transfers = wh_transfers.merge(
         df_warehouse[['SKU_ID', 'Tồn hiện tại']],
@@ -166,7 +174,7 @@ def warehouse_transfers():
     )
 
     # Merge destination store data
-    dest_data = df_stores[['Mã cửa hàng', 'SKU_ID', 'Demand', 'SKC Limit', 'SKC Trưng bày']].copy()
+    dest_data = df_stores[['Mã cửa hàng', 'SKU_ID', 'Demand']].copy()
     wh_transfers = wh_transfers.merge(
         dest_data,
         left_on=['Đích', 'SKU_ID'],
@@ -176,8 +184,69 @@ def warehouse_transfers():
     ).drop(columns=['Mã cửa hàng'], errors='ignore')
 
     # Calculate Số SKC nhận
-    skc_count = wh_transfers.groupby('Đích')['SKC'].nunique().rename('Số SKC nhận')
-    wh_transfers = wh_transfers.merge(skc_count, left_on='Đích', right_index=True, how='left')
+    for category in ['Giày dép', 'Quần áo', 'Phụ kiện']:
+        category_cols = store_profiles[['Store ID', f'SKC Limit_{category}', f'SKC Trưng bày_{category}']].copy()
+        category_cols.columns = ['Store ID', f'SKC_Limit_{category}', f'SKC_Display_{category}']
+
+        wh_transfers = wh_transfers.merge(
+            category_cols,
+            left_on='Đích',
+            right_on='Store ID',
+            how='left'
+        )
+        wh_transfers.drop(columns=['Store ID'], inplace=True, errors='ignore')
+
+    # Create final SKC Limit/Display columns based on Phân loại
+    def get_category_value(row, col_prefix):
+        category = row['Phân loại']
+        if pd.isna(category):
+            return None
+        col_name = f'{col_prefix}_{category}'
+        return row.get(col_name)
+
+    wh_transfers['SKC Limit tại Đích'] = wh_transfers.apply(
+        lambda row: get_category_value(row, 'SKC_Limit'), axis=1
+    )
+    wh_transfers['SKC Trưng bày tại Đích'] = wh_transfers.apply(
+        lambda row: get_category_value(row, 'SKC_Display'), axis=1
+    )
+
+    # Drop intermediate columns
+    drop_cols = [c for c in wh_transfers.columns if c.startswith('SKC_Limit_') or c.startswith('SKC_Display_')]
+    wh_transfers.drop(columns=drop_cols, inplace=True)
+
+    # FIX 2: Count SKCs by (Destination, Category)
+    existing_skcs = df_stores.groupby(['Mã cửa hàng', 'Phân loại'])['Mã màu'].apply(set).reset_index()
+    existing_skcs.rename(columns={'Mã cửa hàng': 'Đích', 'Mã màu': 'Existing_SKCs'}, inplace=True)
+
+    # Merge existing SKCs into wh_transfers
+    wh_transfers = wh_transfers.merge(
+        existing_skcs,
+        on=['Đích', 'Phân loại'],
+        how='left'
+    )
+
+    # Mark if SKC is new (not in existing set)
+    wh_transfers['Is_New_SKC'] = wh_transfers.apply(
+        lambda row: row['SKC'] not in row.get('Existing_SKCs', set()) if pd.notna(row.get('Existing_SKCs')) else True,
+        axis=1
+    )
+
+    # Count only new SKCs by (Destination, Category)
+    new_skc_count = wh_transfers[wh_transfers['Is_New_SKC']].groupby(['Đích', 'Phân loại'])['SKC'].nunique().reset_index()
+    new_skc_count.rename(columns={'SKC': 'Số SKC Đích nhận'}, inplace=True)
+
+    wh_transfers = wh_transfers.merge(
+        new_skc_count,
+        on=['Đích', 'Phân loại'],
+        how='left'
+    )
+
+    # Fill NaN with 0 (no new SKCs)
+    wh_transfers['Số SKC Đích nhận'] = wh_transfers['Số SKC Đích nhận'].fillna(0).astype(int)
+
+    # Drop temporary columns
+    wh_transfers.drop(columns=['Existing_SKCs', 'Is_New_SKC'], inplace=True, errors='ignore')
 
     wh_transfers = wh_transfers.rename(columns={
         'Số lượng': 'Số lượng điều chuyển',
@@ -185,13 +254,14 @@ def warehouse_transfers():
         'Demand': 'Demand Đích',
         'SKC Limit': 'SKC Limit tại Đích',
         'SKC Trưng bày': 'SKC Trưng bày tại Đích',
-        'Số SKC nhận': 'Số SKC Đích nhận'
+        'Số SKC nhận': 'Số SKC Đích nhận',
+        'Demand': 'Demand Đích'
     })
     # Reorder columns
     cols = ['Nguồn', 'Vùng miền Nguồn', 'Đích', 'Vùng miền Đích',
-            'SKU_ID', 'SKC', 'Thuộc tính', 'Số lượng điều chuyển',
-            'Tồn tại Kho', 'Demand Đích', 'SKC Limit tại Đích', 
-            'SKC Trưng bày tại Đích', 'Số SKC Đích nhận'
+            'SKU_ID', 'SKC', 'Mã hàng', 'Phân loại', 'Thuộc tính',
+            'Số lượng điều chuyển', 'Tồn tại Kho', 'Demand Đích',
+            'SKC Limit tại Đích', 'SKC Trưng bày tại Đích', 'Số SKC Đích nhận'
     ]
     cols = [c for c in cols if c in wh_transfers.columns]
     wh_transfers = wh_transfers[cols]
@@ -209,6 +279,7 @@ def store_transfers():
 
     realloc_plan = pd.DataFrame(session['reallocation_plan'])
     df_stores = pd.DataFrame(session['df_stores'])
+    store_profiles = pd.DataFrame(session['store_profiles'])
 
     # Filter store-to-store transfers
     store_transfers = realloc_plan[realloc_plan['Loại'] == 'Chuyển cửa hàng'].copy()
@@ -217,6 +288,13 @@ def store_transfers():
         return jsonify([])
 
     store_transfers = store_transfers.drop(columns=['Loại'])
+
+    # Add category from store data
+    store_transfers = store_transfers.merge(
+        df_stores[['SKU_ID', 'Mã hàng', 'Phân loại']].drop_duplicates(),
+        on='SKU_ID',
+        how='left'
+    )
 
     # Merge source store data
     source_data = df_stores[['Mã cửa hàng', 'SKU_ID', 'Supply', 'MOH']].copy()
@@ -229,7 +307,7 @@ def store_transfers():
     ).drop(columns=['Mã cửa hàng'], errors='ignore')
 
     # Merge destination store data
-    dest_data = df_stores[['Mã cửa hàng', 'SKU_ID', 'Demand', 'SKC Limit', 'SKC Trưng bày']].copy()
+    dest_data = df_stores[['Mã cửa hàng', 'SKU_ID', 'Demand']].copy()
     store_transfers = store_transfers.merge(
         dest_data,
         left_on=['Đích', 'SKU_ID'],
@@ -239,8 +317,68 @@ def store_transfers():
     ).drop(columns=['Mã cửa hàng'], errors='ignore')
 
     # Calculate Số SKC nhận
-    skc_count = store_transfers.groupby('Đích')['SKC'].nunique().rename('Số SKC nhận')
-    store_transfers = store_transfers.merge(skc_count, left_on='Đích', right_index=True, how='left')
+    for category in ['Giày dép', 'Quần áo', 'Phụ kiện']:
+        category_cols = store_profiles[['Store ID', f'SKC Limit_{category}', f'SKC Trưng bày_{category}']].copy()
+        category_cols.columns = ['Store ID', f'SKC_Limit_{category}', f'SKC_Display_{category}']
+
+        store_transfers = store_transfers.merge(
+            category_cols,
+            left_on='Đích',
+            right_on='Store ID',
+            how='left'
+        )
+        store_transfers.drop(columns=['Store ID'], inplace=True, errors='ignore')
+
+    # Create final SKC Limit/Display columns based on Phân loại
+    def get_category_value(row, col_prefix):
+        category = row['Phân loại']
+        if pd.isna(category):
+            return None
+        col_name = f'{col_prefix}_{category}'
+        return row.get(col_name)
+
+    store_transfers['SKC Limit tại Đích'] = store_transfers.apply(
+        lambda row: get_category_value(row, 'SKC_Limit'), axis=1
+    )
+    store_transfers['SKC Trưng bày tại Đích'] = store_transfers.apply(
+        lambda row: get_category_value(row, 'SKC_Display'), axis=1
+    )
+
+    # Drop intermediate columns
+    drop_cols = [c for c in store_transfers.columns if c.startswith('SKC_Limit_') or c.startswith('SKC_Display_')]
+    store_transfers.drop(columns=drop_cols, inplace=True)
+
+    # FIX 2: Count SKCs by (Destination, Category)
+    existing_skcs = df_stores.groupby(['Mã cửa hàng', 'Phân loại'])['Mã màu'].apply(set).reset_index()
+    existing_skcs.rename(columns={'Mã cửa hàng': 'Đích', 'Mã màu': 'Existing_SKCs'}, inplace=True)
+
+    # Merge existing SKCs into store_transfers
+    store_transfers = store_transfers.merge(
+        existing_skcs,
+        on=['Đích', 'Phân loại'],
+        how='left'
+    )
+
+    # Mark if SKC is new (not in existing set)
+    store_transfers['Is_New_SKC'] = store_transfers.apply(
+        lambda row: row['SKC'] not in row.get('Existing_SKCs', set()) if pd.notna(row.get('Existing_SKCs')) else True,
+        axis=1
+    )
+
+    # Count only new SKCs by (Destination, Category)
+    new_skc_count = store_transfers[store_transfers['Is_New_SKC']].groupby(['Đích', 'Phân loại'])['SKC'].nunique().reset_index()
+    new_skc_count.rename(columns={'SKC': 'Số SKC Đích nhận'}, inplace=True)
+
+    store_transfers = store_transfers.merge(
+        new_skc_count,
+        on=['Đích', 'Phân loại'],
+        how='left'
+    )
+
+    store_transfers['Số SKC Đích nhận'] = store_transfers['Số SKC Đích nhận'].fillna(0).astype(int)
+
+    # Drop temporary columns
+    store_transfers.drop(columns=['Existing_SKCs', 'Is_New_SKC'], inplace=True, errors='ignore')
 
     store_transfers = store_transfers.rename(columns={
         'Số lượng': 'Số lượng điều chuyển',
@@ -249,13 +387,15 @@ def store_transfers():
         'Demand': 'Demand Đích',
         'SKC Limit': 'SKC Limit tại Đích',
         'SKC Trưng bày': 'SKC Trưng bày tại Đích',
-        'Số SKC nhận': 'Số SKC Đích nhận'
+        'Số SKC nhận': 'Số SKC Đích nhận',
+        'Demand': 'Demand Đích'
     })
     # Reorder columns
     cols = ['Nguồn', 'Vùng miền Nguồn', 'Supply Nguồn', 'MOH tại Nguồn',
             'Đích', 'Vùng miền Đích', 'Demand Đích', 
-            'SKC Limit tại Đích', 'SKC Trưng bày tại Đích',
-            'SKU_ID', 'SKC', 'Thuộc tính', 'Số lượng điều chuyển', 'Số SKC Đích nhận'
+            'SKU_ID', 'SKC', 'Mã hàng', 'Phân loại', 'Thuộc tính',
+            'Số lượng điều chuyển',
+            'SKC Limit tại Đích', 'SKC Trưng bày tại Đích', 'Số SKC Đích nhận'
     ]
     cols = [c for c in cols if c in store_transfers.columns]
     store_transfers = store_transfers[cols]

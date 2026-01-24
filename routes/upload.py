@@ -120,28 +120,72 @@ def status():
 
 @bp.route('/clear', methods=['POST'])
 def clear():
-    """Clear uploaded files and session data"""
+    """Clear uploaded files, session data, output files and session storage"""
     try:
+        import glob
+        import shutil
+
+        deleted_items = []
+
         # Clear session
         session.clear()
         print("Session cleared")
 
-        # Delete uploaded files
-        import glob
+        # Delete uploaded files in uploads/
         uploaded_files = glob.glob(os.path.join(UPLOAD_FOLDER, '*.csv'))
         for file_path in uploaded_files:
             try:
                 os.remove(file_path)
-                print(f"Deleted: {file_path}")
+                print(f"Deleted upload: {file_path}")
+                deleted_items.append(f"upload: {os.path.basename(file_path)}")
             except Exception as e:
                 print(f"Failed to delete {file_path}: {e}")
+
+        # Delete output files in output/
+        output_dir = './output'
+        if os.path.exists(output_dir):
+            try:
+                output_files = glob.glob(os.path.join(output_dir, '*'))
+                for file_path in output_files:
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                            print(f"Deleted output file: {file_path}")
+                            deleted_items.append(f"output: {os.path.basename(file_path)}")
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)
+                            print(f"Deleted output dir: {file_path}")
+                            deleted_items.append(f"output: {os.path.basename(file_path)}/")
+                    except Exception as e:
+                        print(f"Failed to delete {file_path}: {e}")
+            except Exception as e:
+                print(f"Error accessing output directory: {e}")
+
+        # Delete flask_session files
+        session_dir = './flask_session'
+        if os.path.exists(session_dir):
+            try:
+                session_files = glob.glob(os.path.join(session_dir, '*'))
+                for file_path in session_files:
+                    try:
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                            print(f"Deleted session file: {file_path}")
+                            deleted_items.append(f"session: {os.path.basename(file_path)}")
+                    except Exception as e:
+                        print(f"Failed to delete {file_path}: {e}")
+            except Exception as e:
+                print(f"Error accessing flask_session directory: {e}")
 
         return jsonify({
             'status': 'success',
             'message': 'All data cleared',
-            'files_deleted': len(uploaded_files)
+            'files_deleted': len(deleted_items),
+            'deleted_items': deleted_items
         })
 
     except Exception as e:
         print(f"Error clearing data: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500

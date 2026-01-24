@@ -189,7 +189,7 @@ def broken_by_store_after(store_id):
             result_before[['Mã màu', 'Broken Index']],
             on='Mã màu',
             how='left',
-            suffixes=('', '_before')
+            suffixes=('_after', '_before')
         )
 
         # Reorder columns for frontend
@@ -227,7 +227,7 @@ def broken_by_skc_after(skc):
             result_before[['Mã cửa hàng', 'Broken Index']],
             on='Mã cửa hàng',
             how='left',
-            suffixes=('', '_before')
+            suffixes=('_after', '_before')
         )
 
         # Merge store info for display

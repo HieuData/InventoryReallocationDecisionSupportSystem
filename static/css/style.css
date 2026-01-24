@@ -432,16 +432,16 @@ body {
 
 .sens-btn {
     padding: 8px 15px;
-    border: 1px solid #9b59b6;
+    border: 1px solid #3498db;
     background: white;
-    color: #9b59b6;
+    color: #3498db;
     cursor: pointer;
     border-radius: 3px;
     font-size: 0.85rem;
 }
 
 .sens-btn.active {
-    background: #9b59b6;
+    background: #3498db;
     color: white;
 }
 
