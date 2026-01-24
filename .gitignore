@@ -13,12 +13,15 @@ ENV/
 env/
 
 # Flask
-flask_session/
+flask_session/*
+!flask_session/.gitkeep
 instance/
 
 # Application data folders
-uploads/
-output/
+uploads/*
+!uploads/.gitkeep
+output/*
+!output/.gitkeep
 
 # Environment
 .env
