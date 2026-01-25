@@ -1,0 +1,57 @@
+name: Build Tokyolife Inventory
+
+env:
+  # CHECKOUT_PATH: ~ ${{ github.workspace }}
+  REGSRV: dcsrv02.datcom.vn:5000
+  
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+
+jobs:
+  build-on-dcsrv02:
+    runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+          
+      - name: Generate version based on datetime
+        run: |
+          # Lấy timestamp theo định dạng vYYMMDDHH
+          VERSION=v$(TZ=Asia/Ho_Chi_Minh date +%y%m%d%H)
+          echo "Generated version: $VERSION"
+          # Lưu version vào env
+          echo "TOKYOLIFE_VERSION=$VERSION" >> $GITHUB_ENV
+          # Tạo và push Git tag
+          # git tag $VERSION
+          # git push origin $VERSION
+
+      - name: Build Docker Image for Dev
+        run: |
+          cd ${{ github.workspace }}
+          docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
+          echo "Built image tl-inventory:${{ env.TOKYOLIFE_VERSION }}"
+      # - name: Push Dev image to Local Registry
+      #   run: |
+      #     docker push ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
+      #     echo "Pushed image ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }} to local registry"
+      # - name: Remove Local Dev image
+      #   run: docker rmi ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
+         
+      # - name: Trigger Deploy Workflow for Dev
+      #   uses: benc-uk/workflow-dispatch@v1.2.3 # search in marketplace
+      #   with:
+      #     workflow: deploy-image.yml
+      #     token: ${{ secrets.REPO_PAT }}
+      #     ref: main
+      #     inputs: |
+      #       {
+      #         "version": "${{ env.TOKYOLIFE_VERSION }}",
+      #         "image_name": "tl-inventory",
+      #         "site_name": "uat"
+      #       }
+
+            
