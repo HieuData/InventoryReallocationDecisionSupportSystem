@@ -1,0 +1,106 @@
+name: Deploy Tokyolife Inventory on dcsrv02
+
+env:
+  COMPOSE_PATH: /opt/jobhula/project/tokyolife/inventory
+  REGSRV: dcsrv02.datcom.vn:5000
+  
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version của image mới (ví dụ: v25081908).'
+        required: false
+      deploy_type:
+        description: 'Cập nhật source hoặc cả image'
+        required: true
+        type: choice
+        options:
+          - sync
+          - image
+        default: 'sync'
+      site_name:
+        description: 'Deploy cho site'
+        required: true
+        type: choice
+        options:
+          - uat
+        default: 'uat'
+
+jobs:
+  sync-source-uat:
+    if: ${{ inputs.deploy_type == 'sync' && inputs.site_name == 'uat' }}
+    runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01/sdsrv02
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+
+      - name: Sync source site uat
+        run: |
+          rsync -razv --exclude='_pycache__' --exclude='.env.example' ${{ github.workspace }}/ ${{ env.COMPOSE_PATH }}/src/
+          # restart container
+          cd ${{ env.COMPOSE_PATH }}/
+          docker-compose -f docker-compose.yml down
+          docker-compose -f docker-compose.yml up -d
+
+          echo "Containers after deployment:"
+          docker-compose logs
+
+
+          
+  #### Deploy laravelapi ####
+  # deploy-neu-laravelapi-on-sdsrv02:
+  #   if: ${{ inputs.image_name == 'tj-laravelapi' && inputs.site_name == 'neucv' }}
+  #   runs-on: sdsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01/sdsrv02
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+
+  #     - name: Determine version
+  #       id: get_version
+  #       run: |
+  #         if [ -z "${{ inputs.version }}" ]; then
+  #           VERSION=$(docker images ${{ inputs.image_name }} --format "{{.Tag}}" | grep '^v[0-9]\{6,8\}' | sort -V | tail -1)
+  #           if [ -z "$VERSION" ]; then
+  #             echo "Error: No valid version found for ${{ inputs.image_name }}"
+  #             exit 1
+  #           fi
+  #         else
+  #           VERSION=${{ inputs.version }}
+  #         fi
+  #         echo "Using version: $VERSION"
+  #         echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  #     - name: Pull image from Registry
+  #       run: |
+  #         echo "Pull laravelapi image"
+  #         docker pull ${{ env.REGSRV }}/${{ inputs.image_name }}:${{ steps.get_version.outputs.version }}
+          
+  #     - name: Deploy site neucv
+  #       if: ${{ inputs.site_name == 'neucv' }}
+  #       run: |
+  #         cd ${{ env.COMPOSE_PATH }}/neu-laravelapi
+  #         echo "Current containers before down:"
+  #         docker ps -a | grep ${{ inputs.image_name }} || echo "No running containers for ${{ inputs.image_name }}"
+  #         docker-compose down
+  #         echo "Docker-compose down completed."
+
+  #         echo "Update .env with new version"
+  #         if [ ! -f .env ]; then
+  #           echo "Error: .env file not found in ${{ env.COMPOSE_PATH }}/neu-laravelapi"
+  #           exit 1
+  #         fi
+  #         cat .env | grep IMAGE_VERSION  # Debug: old version
+  #         sed -i "s/IMAGE_VERSION_LARAVELAPI=.*/IMAGE_VERSION_LARAVELAPI=${{ steps.get_version.outputs.version }}/" .env
+  #         echo "Updated .env with IMAGE_VERSION_LARAVELAPI=${{ steps.get_version.outputs.version }}"
+  #         cat .env | grep IMAGE_VERSION  # Debug: up new version
+
+  #         echo "Docker-compose up"
+  #         docker-compose up -d
+  #         echo "Docker-compose up completed."
+
+  #         echo "Containers after deployment:"
+  #         docker ps | grep ${{ steps.get_version.outputs.version }} || echo "No running containers for ${{ steps.get_version.outputs.version }}"
+  #         echo "Deployment log for ${{ inputs.image_name }}:${{ steps.get_version.outputs.version }} completed."
+  #         docker-compose logs
