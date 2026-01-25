@@ -37,7 +37,7 @@ jobs:
 
       - name: Sync source site uat
         run: |
-          rsync -razv --exclude='.git' --exclude='_pycache__' --exclude='.env.example' ${{ github.workspace }}/ ${{ env.COMPOSE_PATH }}/src/
+          rsync -razv --exclude='.git' --exclude='_pycache__' --exclude='.env' --exclude='.env.example' ${{ github.workspace }}/ ${{ env.COMPOSE_PATH }}/src/
           # restart container
           cd ${{ env.COMPOSE_PATH }}/
           docker-compose -f docker-compose.yml down
