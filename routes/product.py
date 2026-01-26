@@ -4,7 +4,10 @@ import sys
 import os
 from io import BytesIO
 sys.path.insert(0, '.')
-from core.data_processor import create_system_skc_profiles, create_system_sku_profiles, create_system_ma_hang_profiles
+from core.data_processor import (
+    create_system_skc_profiles, create_system_sku_profiles, create_system_ma_hang_profiles,
+    create_location_skc_profiles, create_location_sku_profiles, create_location_ma_hang_profiles
+)
 
 bp = Blueprint('product', __name__, url_prefix='/api/product')
 
@@ -24,11 +27,12 @@ def moh_filter(df, moh_range):
 @bp.route('/skc')
 def get_product_skc():
     """Get SKC (Style-Color) level product data"""
-    if 'df_stores' not in session:
+    if 'df_stores' not in session or 'df_warehouse' not in session or 'df_broken' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df = create_system_skc_profiles(
         pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse']),
         pd.DataFrame(session['df_broken'])
     )
 
@@ -47,11 +51,12 @@ def get_product_skc():
 @bp.route('/sku')
 def get_product_sku():
     """Get SKU (Stock Keeping Unit) level product data"""
-    if 'df_stores' not in session:
+    if 'df_stores' not in session or 'df_warehouse' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df = create_system_sku_profiles(
-        pd.DataFrame(session['df_stores'])
+        pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse'])
     )
 
     # Apply MOH filter if specified
@@ -63,11 +68,12 @@ def get_product_sku():
 @bp.route('/ma_hang')
 def get_product_ma_hang():
     """Get Mã hàng level product data"""
-    if 'df_stores' not in session or 'df_broken' not in session:
+    if 'df_stores' not in session or 'df_warehouse' not in session or 'df_broken' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df = create_system_ma_hang_profiles(
         pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse']),
         pd.DataFrame(session['df_broken'])
     )
 
@@ -82,52 +88,155 @@ def get_product_ma_hang():
 
     return jsonify(df.to_dict('records'))
 
-@bp.route('/ma_hang_list')
-def get_ma_hang_list():
-    """Get list of all Mã hàng"""
-    if 'df_stores' not in session:
+@bp.route('/location_skc')
+def get_location_product_skc():
+    """Get SKC level product data by location"""
+    if 'df_stores' not in session or 'df_warehouse' not in session:
+        return jsonify({'error': 'No data loaded'}), 400
+
+    df = create_location_skc_profiles(
+        pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse'])
+    )
+
+    # Apply location filter if specified
+    location = request.args.get('location', 'all')
+    if location != 'all':
+        df = df[df['Mã cửa hàng'] == location]
+
+    # Apply MOH filter if specified
+    moh_range = request.args.get('moh', 'all')
+    df = moh_filter(df, moh_range)
+
+    return jsonify(df.to_dict('records'))
+
+@bp.route('/location_sku')
+def get_location_product_sku():
+    """Get SKU level product data by location"""
+    if 'df_stores' not in session or 'df_warehouse' not in session:
+        return jsonify({'error': 'No data loaded'}), 400
+
+    df = create_location_sku_profiles(
+        pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse'])
+    )
+
+    # Apply location filter if specified
+    location = request.args.get('location', 'all')
+    if location != 'all':
+        df = df[df['Mã cửa hàng'] == location]
+
+    # Apply MOH filter if specified
+    moh_range = request.args.get('moh', 'all')
+    df = moh_filter(df, moh_range)
+
+    return jsonify(df.to_dict('records'))
+
+@bp.route('/location_ma_hang')
+def get_location_product_ma_hang():
+    """Get Mã hàng level product data by location"""
+    if 'df_stores' not in session or 'df_warehouse' not in session:
+        return jsonify({'error': 'No data loaded'}), 400
+
+    df = create_location_ma_hang_profiles(
+        pd.DataFrame(session['df_stores']),
+        pd.DataFrame(session['df_warehouse'])
+    )
+
+    # Apply location filter if specified
+    location = request.args.get('location', 'all')
+    if location != 'all':
+        df = df[df['Mã cửa hàng'] == location]
+
+    # Apply MOH filter if specified
+    moh_range = request.args.get('moh', 'all')
+    df = moh_filter(df, moh_range)
+
+    return jsonify(df.to_dict('records'))
+
+@bp.route('/location_list')
+def get_location_list():
+    """Get list of all locations (stores + warehouse)"""
+    if 'df_stores' not in session or 'df_warehouse' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df_stores = pd.DataFrame(session['df_stores'])
-    ma_hang_list = sorted(df_stores['Mã hàng'].unique().tolist())
+
+    # Get unique store codes and add 'Kho'
+    store_list = sorted(df_stores['Mã cửa hàng'].unique().tolist())
+    location_list = store_list + ['Kho']
+
+    return jsonify(location_list)
+
+@bp.route('/ma_hang_list')
+def get_ma_hang_list():
+    """Get list of all Mã hàng"""
+    if 'df_stores' not in session or 'df_warehouse' not in session:
+        return jsonify({'error': 'No data loaded'}), 400
+
+    df_stores = pd.DataFrame(session['df_stores'])
+    df_warehouse = pd.DataFrame(session['df_warehouse'])
+
+    # Gộp stores + warehouse để lấy tất cả Mã hàng
+    ma_hang_stores = set(df_stores['Mã hàng'].unique())
+    ma_hang_warehouse = set(df_warehouse['Mã hàng'].unique())
+    ma_hang_list = sorted(ma_hang_stores | ma_hang_warehouse)
+
     return jsonify(ma_hang_list)
 
 @bp.route('/mau_list')
 def get_mau_list():
     """Get list of Màu chi tiết, optionally filtered by Mã hàng"""
-    if 'df_stores' not in session:
+    if 'df_stores' not in session or 'df_warehouse' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df_stores = pd.DataFrame(session['df_stores'])
+    df_warehouse = pd.DataFrame(session['df_warehouse'])
     ma_hang = request.args.get('ma_hang', 'all')
 
+    # Filter stores
     if ma_hang != 'all':
-        df_filtered = df_stores[df_stores['Mã hàng'] == ma_hang]
+        df_stores_filtered = df_stores[df_stores['Mã hàng'] == ma_hang]
+        df_warehouse_filtered = df_warehouse[df_warehouse['Mã hàng'] == ma_hang]
     else:
-        df_filtered = df_stores
+        df_stores_filtered = df_stores
+        df_warehouse_filtered = df_warehouse
 
-    mau_list = sorted(df_filtered['Màu chi tiết'].unique().tolist())
+    # Gộp stores + warehouse để lấy tất cả Màu chi tiết
+    mau_stores = set(df_stores_filtered['Màu chi tiết'].unique())
+    mau_warehouse = set(df_warehouse_filtered['Màu chi tiết'].unique())
+    mau_list = sorted(mau_stores | mau_warehouse)
+
     return jsonify(mau_list)
 
 @bp.route('/size_list')
 def get_size_list():
     """Get list of sizes, optionally filtered by Mã hàng and Màu chi tiết"""
-    if 'df_stores' not in session:
+    if 'df_stores' not in session or 'df_warehouse' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df_stores = pd.DataFrame(session['df_stores'])
+    df_warehouse = pd.DataFrame(session['df_warehouse'])
     ma_hang = request.args.get('ma_hang', 'all')
     mau_chi_tiet = request.args.get('mau_chi_tiet', 'all')
 
-    df_filtered = df_stores
+    # Filter stores
+    df_stores_filtered = df_stores
+    df_warehouse_filtered = df_warehouse
 
     if ma_hang != 'all':
-        df_filtered = df_filtered[df_filtered['Mã hàng'] == ma_hang]
+        df_stores_filtered = df_stores_filtered[df_stores_filtered['Mã hàng'] == ma_hang]
+        df_warehouse_filtered = df_warehouse_filtered[df_warehouse_filtered['Mã hàng'] == ma_hang]
 
     if mau_chi_tiet != 'all':
-        df_filtered = df_filtered[df_filtered['Màu chi tiết'] == mau_chi_tiet]
+        df_stores_filtered = df_stores_filtered[df_stores_filtered['Màu chi tiết'] == mau_chi_tiet]
+        df_warehouse_filtered = df_warehouse_filtered[df_warehouse_filtered['Màu chi tiết'] == mau_chi_tiet]
 
-    size_list = sorted(df_filtered['Size'].unique().tolist())
+    # Gộp stores + warehouse để lấy tất cả Size
+    size_stores = set(df_stores_filtered['Size'].unique())
+    size_warehouse = set(df_warehouse_filtered['Size'].unique())
+    size_list = sorted(size_stores | size_warehouse)
+
     return jsonify(size_list)
 
 # @bp.route('/export_sku_csv')
