@@ -422,6 +422,33 @@ $(document).ready(function() {
         });
     }
 
+    // Load location list for all layers
+    function loadLocationList() {
+        fetch('/api/product/location_list')
+            .then(response => response.json())
+            .then(locations => {
+                // Populate all location dropdowns
+                ['ma-hang', 'skc', 'sku'].forEach(layer => {
+                    const select = document.getElementById(`filter-location-${layer}`);
+                    if (select) {
+                        // Clear existing options except "Tất cả"
+                        select.innerHTML = '<option value="all">Tất cả</option>';
+                        
+                        // Add location options
+                        locations.forEach(location => {
+                            const option = document.createElement('option');
+                            option.value = location;
+                            option.textContent = location;
+                            select.appendChild(option);
+                        });
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading location list:', error);
+            });
+    }
+
     // =========================================================================
     // RUN OPTIMIZATION
     // =========================================================================
@@ -1023,9 +1050,9 @@ $(document).ready(function() {
 
     function updateDataStatus(loaded) {
         if (loaded) {
-            $('#data-status').html('<span class="status-dot green"></span> Data loaded');
+            $('#data-status').html('<span class="status-dot green"></span> Dữ liệu đã được tải lên');
         } else {
-            $('#data-status').html('<span class="status-dot red"></span> No data loaded');
+            $('#data-status').html('<span class="status-dot red"></span> Chưa có dữ liệu');
         }
     }
 
@@ -1233,19 +1260,36 @@ $(document).ready(function() {
     function loadProductData(layer) {
         const maHang = $('#filter-ma-hang-' + layer).val() || 'all';
         const moh = $('#filter-moh-' + layer).val() || 'all';
+        const location = $('#filter-location-' + layer).val() || 'all';
 
-        // Build endpoint URL based on layer
+        // Build endpoint URL based on layer and location selection
         let endpoint;
-        if (layer === 'ma-hang') {
-            endpoint = '/api/product/ma_hang';
-        } else if (layer === 'skc') {
-            endpoint = '/api/product/skc';
+        if (location === 'all') {
+            // Use system-wide aggregated APIs
+            if (layer === 'ma-hang') {
+                endpoint = '/api/product/ma_hang';
+            } else if (layer === 'skc') {
+                endpoint = '/api/product/skc';
+            } else {
+                endpoint = '/api/product/sku';
+            }
         } else {
-            endpoint = '/api/product/sku';
+            // Use location-specific APIs
+            if (layer === 'ma-hang') {
+                endpoint = '/api/product/location_ma_hang';
+            } else if (layer === 'skc') {
+                endpoint = '/api/product/location_skc';
+            } else {
+                endpoint = '/api/product/location_sku';
+            }
         }
 
-        let url = endpoint + '?';
-        if (moh !== 'all') url += 'moh=' + moh;
+        // Build query parameters
+        let params = [];
+        if (location !== 'all') params.push('location=' + encodeURIComponent(location));
+        if (moh !== 'all') params.push('moh=' + moh);
+
+        let url = endpoint + (params.length > 0 ? '?' + params.join('&') : '');
 
         $.get(url, function(data) {
             if (data.error) {
@@ -1282,23 +1326,46 @@ $(document).ready(function() {
                 return;
             }
 
-            // Định nghĩa thứ tự cột mong muốn theo layer
+            // Định nghĩa thứ tự cột mong muốn theo layer và location
             let columnOrder;
             if (layer === 'skc') {
-                columnOrder = [
-                    'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
-                    'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply',
-                    'TB Tình trạng Gãy Size', 'Số CH Gãy Size', 'Số Store'
-                ];
+                if (location === 'all') {
+                    // System-wide view: has 'Số CH có Tồn', no 'Mã cửa hàng'
+                    columnOrder = [
+                        'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
+                        'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply',
+                        'Tình trạng Gãy Size TB', 'Số CH Gãy Size', 'Số CH có Tồn'
+                    ];
+                } else {
+                    // Location-specific view: has 'Mã cửa hàng', no 'Số CH có Tồn'
+                    columnOrder = [
+                        'Mã cửa hàng', 'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
+                        'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply'
+                    ];
+                }
             } else if (layer === 'sku') {
-                columnOrder = [
-                    'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
-                    'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
-                    'MOH', 'MOH Rating', 'Demand', 'Supply', 'Số Store'
-                ];
+                if (location === 'all') {
+                    // System-wide view: has 'Số CH có Tồn', no 'Mã cửa hàng'
+                    columnOrder = [
+                        'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                        'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
+                        'MOH', 'MOH Rating', 'Demand', 'Supply', 'Số CH có Tồn'
+                    ];
+                } else {
+                    // Location-specific view: has 'Mã cửa hàng', no 'Số CH có Tồn'
+                    columnOrder = [
+                        'Mã cửa hàng', 'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                        'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
+                        'MOH', 'MOH Rating', 'Demand', 'Supply'
+                    ];
+                }
             } else {
-                // ma-hang layer - keep current order
-                columnOrder = ['Mã hàng', 'MOH', 'MOH Rating', 'Tồn hiện tại', 'Bán TB'];
+                // ma-hang layer
+                if (location === 'all') {
+                    columnOrder = ['Mã hàng', 'MOH', 'MOH Rating', 'Tồn hiện tại', 'Bán TB'];
+                } else {
+                    columnOrder = ['Mã cửa hàng', 'Mã hàng', 'MOH', 'MOH Rating', 'Tồn hiện tại', 'Bán TB'];
+                }
             }
 
             const allKeys = Object.keys(filteredData[0]);
@@ -1312,6 +1379,7 @@ $(document).ready(function() {
     }
 
     // Initialize filters and load data for all three layers on page load
+    loadLocationList();
     loadProductFilters('ma-hang');
     loadProductFilters('skc');
     loadProductFilters('sku');
@@ -1372,6 +1440,19 @@ $(document).ready(function() {
     });
 
     $('#filter-moh-sku').on('change', function() {
+        loadProductData('sku');
+    });
+
+    // Location filter change handlers for all layers
+    $('#filter-location-ma-hang').on('change', function() {
+        loadProductData('ma-hang');
+    });
+
+    $('#filter-location-skc').on('change', function() {
+        loadProductData('skc');
+    });
+
+    $('#filter-location-sku').on('change', function() {
         loadProductData('sku');
     });
 

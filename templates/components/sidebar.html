@@ -1,24 +1,24 @@
 <aside class="sidebar">
-    <h2>⚙️ Configuration</h2>
+    <h2>⚙️ Tùy chỉnh</h2>
     
     <div class="config-section">
-        <h3>Input Files</h3>
-        <label>Store Files:</label>
+        <h3>Dữ liệu đầu vào</h3>
+        <label>Dữ liệu cửa hàng:</label>
         <input type="file" id="store-files" multiple accept=".csv">
         
-        <label>Warehouse Files:</label>
+        <label>Dữ liệu kho:</label>
         <input type="file" id="warehouse-files" multiple accept=".csv">
     </div>
     
     <div class="config-section">
-        <h3>Parameters</h3>
-        <label>Time Limit (s):</label>
+        <h3>Tham số</h3>
+        <label>Thời gian giới hạn khi chạy mô hình (s):</label>
         <input type="number" id="time-limit" value="300" min="10">
         
-        <label>Optimality Gap:</label>
+        <label>Chênh lệch giữa kết quả và giá trị tối ưu toàn cục:</label>
         <input type="number" id="gap" value="0.05" step="0.01" min="0" max="1">
         
-        <label>Season:</label>
+        <label>Mùa:</label>
         <select id="season">
             <option value="false">Chưa vào mùa</option>
             <option value="true">Đã vào mùa</option>
@@ -26,8 +26,8 @@
     </div>
 
     <div class="config-section">
-        <h3>Category Filter</h3>
-        <label>Category:</label>
+        <h3>Lọc theo Phân loại</h3>
+        <label>Phân loại:</label>
         <select id="category-filter-overview">
             <option value="Giày dép">Giày dép</option>
             <option value="Quần áo">Quần áo</option>
@@ -36,12 +36,12 @@
     </div>
 
     <div class="config-section">
-        <h3>Data Status</h3>
+        <h3>Trạng thái dữ liệu</h3>
         <div id="data-status">
-            <span class="status-dot red"></span> No data loaded
+            <span class="status-dot red"></span> Chưa có dữ liệu
         </div>
         <button id="btn-clear-data" class="btn btn-danger" style="margin-top: 10px; width: 100%;">
-            🗑️ Clear All Data
+            🗑️ Xóa tất cả dữ liệu
         </button>
     </div>
 </aside>

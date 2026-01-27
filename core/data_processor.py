@@ -256,7 +256,7 @@ def calculate_broken_index_for_skc(
     # Đếm số size có trong master mà cũng có tồn
     count_available = sum(1 for s in master_sizes if s in sizes_with_stock)
     
-    # Broken Index = 100 - (số size có / tổng size) * 100
+    # Broken Index = 100 - (s��� size có / tổng size) * 100
     broken_index = 100 - (count_available / len(master_sizes)) * 100
     broken_index = round(broken_index, 2)
     
@@ -540,13 +540,41 @@ def create_warehouse_skc_view(
 
 
 def create_system_sku_profiles(
-    df_stores: pd.DataFrame
+    df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Tạo SKU Profiles toàn hệ thống.
-    Gộp theo SKU trên tất cả cửa hàng.
+    Gộp stores + warehouse trước khi aggregate.
+
+    Note: Warehouse chỉ có Tồn hiện tại, không có sales data.
+    Bán TB, Demand, Supply chỉ lấy từ stores.
     """
-    sku_profiles = df_stores.groupby('SKU_ID').agg({
+    # Select columns from stores (has all data including MOH)
+    stores_cols = ['SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                   'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB', 'MOH',
+                   'Demand', 'Supply']
+    df_stores_subset = df_stores[stores_cols].copy()
+
+    # Select columns from warehouse (only has inventory, no sales)
+    warehouse_cols = ['SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                      'Thuộc tính', 'Phân loại', 'Tồn hiện tại']
+    df_warehouse_subset = df_warehouse[warehouse_cols].copy()
+
+    # Add missing columns to warehouse
+    # Supply = Tồn hiện tại (toàn bộ tồn kho có thể supply)
+    # MOH = 0 (không tính MOH cho warehouse)
+    df_warehouse_subset['Bán TB'] = 0
+    df_warehouse_subset['MOH'] = 0
+    df_warehouse_subset['Demand'] = 0
+    df_warehouse_subset['Supply'] = df_warehouse_subset['Tồn hiện tại']
+
+    # Concat stores + warehouse
+    df_combined = pd.concat([df_stores_subset, df_warehouse_subset], ignore_index=True)
+
+    # Aggregate by SKU_ID (sum across stores + warehouse)
+    # MOH: lấy max để giữ giá trị từ stores (warehouse = 0)
+    sku_profiles = df_combined.groupby('SKU_ID').agg({
         'Mã hàng': 'first',
         'Mã màu': 'first',
         'Màu chi tiết': 'first',
@@ -555,16 +583,14 @@ def create_system_sku_profiles(
         'Phân loại': 'first',
         'Tồn hiện tại': 'sum',
         'Bán TB': 'sum',
+        'MOH': 'max',  # Giữ MOH từ stores (warehouse = 0)
         'Demand': 'sum',
         'Supply': 'sum'
     }).reset_index()
-    
+
     sku_profiles['Bán TB'] = sku_profiles['Bán TB'].round(1)
 
-    # Tính MOH hệ thống
-    sku_profiles['MOH'] = sku_profiles['Tồn hiện tại'] / np.maximum(1, sku_profiles['Bán TB'])
-    sku_profiles['MOH'] = sku_profiles['MOH'].round(1)
-
+    # Tính MOH Rating sau khi gộp
     sku_profiles['MOH Rating'] = np.where(
         sku_profiles['MOH'] < MOH_THRESHOLD_LOW, 'Tốt',
         np.where(sku_profiles['MOH'] <= MOH_THRESHOLD_HIGH, 'Trung bình', 'Kém')
@@ -572,12 +598,12 @@ def create_system_sku_profiles(
     
     # Đếm số store có SKU này
     store_count = df_stores.groupby('SKU_ID')['Mã cửa hàng'].nunique()
-    sku_profiles['Số Store'] = sku_profiles['SKU_ID'].map(store_count).fillna(0).astype(int)
+    sku_profiles['Số CH có Tồn'] = sku_profiles['SKU_ID'].map(store_count).fillna(0).astype(int)
 
     # Reorder columns for consistent display
     cols = ['SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
             'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
-            'MOH', 'MOH Rating', 'Demand', 'Supply', 'Số Store']
+            'MOH', 'MOH Rating', 'Demand', 'Supply', 'Số CH có Tồn']
     cols = [c for c in cols if c in sku_profiles.columns]
     remaining = [c for c in sku_profiles.columns if c not in cols]
     cols.extend(remaining)
@@ -588,29 +614,54 @@ def create_system_sku_profiles(
 
 def create_system_skc_profiles(
     df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame,
     df_broken: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Tạo SKC Profiles toàn hệ thống.
-    Gộp theo SKC trên tất cả cửa hàng.
+    Gộp stores + warehouse trước khi aggregate.
+
+    Note: Warehouse chỉ có Tồn hiện tại, không có sales data.
+    Bán TB, Demand, Supply chỉ lấy từ stores.
     """
-    skc_profiles = df_stores.groupby('Mã màu').agg({
+    # Select columns from stores (has all data including MOH)
+    stores_cols = ['Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
+                   'Tồn hiện tại', 'Bán TB', 'MOH', 'Demand', 'Supply']
+    df_stores_subset = df_stores[stores_cols].copy()
+
+    # Select columns from warehouse (only has inventory, no sales)
+    warehouse_cols = ['Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
+                      'Tồn hiện tại']
+    df_warehouse_subset = df_warehouse[warehouse_cols].copy()
+
+    # Add missing columns to warehouse
+    # Supply = Tồn hiện tại (toàn bộ tồn kho có thể supply)
+    # MOH = 0 (không tính MOH cho warehouse)
+    df_warehouse_subset['Bán TB'] = 0
+    df_warehouse_subset['MOH'] = 0
+    df_warehouse_subset['Demand'] = 0
+    df_warehouse_subset['Supply'] = df_warehouse_subset['Tồn hiện tại']
+
+    # Concat stores + warehouse
+    df_combined = pd.concat([df_stores_subset, df_warehouse_subset], ignore_index=True)
+
+    # Aggregate by Mã màu (SKC)
+    # MOH: lấy max để giữ giá trị từ stores (warehouse = 0)
+    skc_profiles = df_combined.groupby('Mã màu').agg({
         'Mã hàng': 'first',
         'Màu chi tiết': 'first',
         'Thuộc tính': 'first',
         'Phân loại': 'first',
         'Tồn hiện tại': 'sum',
         'Bán TB': 'sum',
+        'MOH': 'max',  # Giữ MOH từ stores (warehouse = 0)
         'Demand': 'sum',
         'Supply': 'sum'
     }).reset_index()
-    
+
     skc_profiles['Bán TB'] = skc_profiles['Bán TB'].round(1)
 
-    # Tính MOH hệ thống
-    skc_profiles['MOH'] = skc_profiles['Tồn hiện tại'] / np.maximum(1, skc_profiles['Bán TB'])
-    skc_profiles['MOH'] = skc_profiles['MOH'].round(1)
-
+    # Tính MOH Rating sau khi gộp
     skc_profiles['MOH Rating'] = np.where(
         skc_profiles['MOH'] < MOH_THRESHOLD_LOW, 'Tốt',
         np.where(skc_profiles['MOH'] <= MOH_THRESHOLD_HIGH, 'Trung bình', 'Kém')
@@ -629,12 +680,12 @@ def create_system_skc_profiles(
     
     # Đếm số store có SKC này
     store_count = df_stores.groupby('Mã màu')['Mã cửa hàng'].nunique()
-    skc_profiles['Số Store'] = skc_profiles['Mã màu'].map(store_count).fillna(0).astype(int)
+    skc_profiles['Số CH có Tồn'] = skc_profiles['Mã màu'].map(store_count).fillna(0).astype(int)
 
     # Reorder columns for consistent display
     cols = ['Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
             'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply',
-            'Avg Broken Index', 'Stores Broken', 'Số Store']
+            'Avg Broken Index', 'Stores Broken', 'Số CH có Tồn']
     cols = [c for c in cols if c in skc_profiles.columns]
     remaining = [c for c in skc_profiles.columns if c not in cols]
     cols.extend(remaining)
@@ -644,38 +695,60 @@ def create_system_skc_profiles(
 
 def create_system_ma_hang_profiles(
     df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame,
     df_broken: pd.DataFrame
 ) -> pd.DataFrame:
     """
     Tạo Mã hàng Profiles toàn hệ thống.
-    Gộp theo Mã hàng trên tất cả cửa hàng.
-    
+    Gộp stores + warehouse trước khi aggregate.
+
     Args:
         df_stores: DataFrame chứa dữ liệu tồn kho của các store
+        df_warehouse: DataFrame chứa dữ liệu tồn kho ở kho
         df_broken: DataFrame chứa thông tin broken size
-    
+
     Returns:
         DataFrame với columns: Mã hàng, Phân loại, Thuộc tính,
         Tồn hiện tại, Bán TB, MOH, MOH Rating, Demand, Supply,
         Avg Broken Index, Stores Broken, Số SKC, Số Store
     """
+    # Combine stores + warehouse
+    # Note: Warehouse chỉ có Tồn hiện tại, không có sales data.
+    # Bán TB, Demand chỉ lấy từ stores. Supply warehouse = Tồn hiện tại.
+    stores_cols = ['Mã hàng', 'Phân loại', 'Tồn hiện tại', 'Bán TB', 'MOH',
+                   'Demand', 'Supply']
+    df_stores_subset = df_stores[stores_cols].copy()
+
+    # Select columns from warehouse (only has inventory, no sales)
+    warehouse_cols = ['Mã hàng', 'Phân loại', 'Tồn hiện tại']
+    df_warehouse_subset = df_warehouse[warehouse_cols].copy()
+
+    # Add missing columns to warehouse
+    # Supply = Tồn hiện tại (toàn bộ tồn kho có thể supply)
+    # MOH = 0 (không tính MOH cho warehouse)
+    df_warehouse_subset['Bán TB'] = 0
+    df_warehouse_subset['MOH'] = 0
+    df_warehouse_subset['Demand'] = 0
+    df_warehouse_subset['Supply'] = df_warehouse_subset['Tồn hiện tại']
+
+    # Concat stores + warehouse
+    df_combined = pd.concat([df_stores_subset, df_warehouse_subset], ignore_index=True)
+
     # Group by Mã hàng và aggregate
-    ma_hang_profiles = df_stores.groupby('Mã hàng').agg({
+    # MOH: lấy max để giữ giá trị từ stores (warehouse = 0)
+    ma_hang_profiles = df_combined.groupby('Mã hàng').agg({
         'Phân loại': 'first',
         'Tồn hiện tại': 'sum',
         'Bán TB': 'sum',
+        'MOH': 'max',  # Giữ MOH từ stores (warehouse = 0)
         'Demand': 'sum',
         'Supply': 'sum'
     }).reset_index()
-    
+
     # Round Bán TB
     ma_hang_profiles['Bán TB'] = ma_hang_profiles['Bán TB'].round(1)
-    
-    # Calculate MOH
-    ma_hang_profiles['MOH'] = ma_hang_profiles['Tồn hiện tại'] / np.maximum(1, ma_hang_profiles['Bán TB'])
-    ma_hang_profiles['MOH'] = ma_hang_profiles['MOH'].round(1)
-    
-    # MOH Rating
+
+    # Tính MOH Rating sau khi gộp
     ma_hang_profiles['MOH Rating'] = np.where(
         ma_hang_profiles['MOH'] < MOH_THRESHOLD_LOW, 'Tốt',
         np.where(ma_hang_profiles['MOH'] <= MOH_THRESHOLD_HIGH, 'Trung bình', 'Kém')
@@ -692,23 +765,18 @@ def create_system_ma_hang_profiles(
     }).reset_index()
     broken_agg.columns = ['Mã hàng', 'Avg Broken Index', 'Stores Broken']
     
-    # Merge broken data
-    ma_hang_profiles = ma_hang_profiles.merge(broken_agg, on='Mã hàng', how='left')
-    ma_hang_profiles['Avg Broken Index'] = ma_hang_profiles['Avg Broken Index'].fillna(0).round(1)
-    ma_hang_profiles['Stores Broken'] = ma_hang_profiles['Stores Broken'].fillna(0).astype(int)
-    
     # Count số SKC per Mã hàng (Mã màu là SKC)
     skc_count = df_stores.groupby('Mã hàng')['Mã màu'].nunique()
-    ma_hang_profiles['Số SKC'] = ma_hang_profiles['Mã hàng'].map(skc_count).fillna(0).astype(int)
+    ma_hang_profiles['Số SKC có Tồn'] = ma_hang_profiles['Mã hàng'].map(skc_count).fillna(0).astype(int)
     
     # Count số Store per Mã hàng
     store_count = df_stores.groupby('Mã hàng')['Mã cửa hàng'].nunique()
-    ma_hang_profiles['Số Store'] = ma_hang_profiles['Mã hàng'].map(store_count).fillna(0).astype(int)
+    ma_hang_profiles['Số CH có Tồn'] = ma_hang_profiles['Mã hàng'].map(store_count).fillna(0).astype(int)
     
     # Reorder columns
     cols = ['Mã hàng', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
             'MOH', 'MOH Rating', 'Demand', 'Supply',
-            'Avg Broken Index', 'Stores Broken', 'Số SKC', 'Số Store']
+            'Avg Broken Index', 'Số SKC có Tồn', 'Số CH có Tồn']
     
     # Handle optional 'Thuộc tính' column nếu có
     if 'Thuộc tính' in df_stores.columns:
@@ -724,6 +792,119 @@ def create_system_ma_hang_profiles(
     cols.extend(remaining)
     ma_hang_profiles = ma_hang_profiles[cols]
     
+    return ma_hang_profiles
+
+
+# =============================================================================
+# LOCATION-BASED PRODUCT PROFILES (Detailed by Store/Warehouse)
+# =============================================================================
+
+def create_location_sku_profiles(
+    df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Tạo SKU Profiles chi tiết theo vị trí (từng cửa hàng + kho).
+    Không aggregate, giữ nguyên từng location riêng biệt.
+    """
+    # Select columns from stores
+    stores_cols = ['SKU_ID', 'Mã cửa hàng', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                   'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating',
+                   'Demand', 'Supply']
+    df_stores_subset = df_stores[stores_cols].copy()
+
+    # Select columns from warehouse
+    warehouse_cols = ['SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+                      'Thuộc tính', 'Phân loại', 'Tồn hiện tại']
+    df_warehouse_subset = df_warehouse[warehouse_cols].copy()
+
+    # Add warehouse-specific columns
+    df_warehouse_subset['Mã cửa hàng'] = 'Kho'
+    df_warehouse_subset['Bán TB'] = 0
+    df_warehouse_subset['MOH'] = 0
+    df_warehouse_subset['MOH Rating'] = ''
+    df_warehouse_subset['Demand'] = 0
+    df_warehouse_subset['Supply'] = df_warehouse_subset['Tồn hiện tại']
+
+    # Concat stores + warehouse (không aggregate)
+    location_profiles = pd.concat([df_stores_subset, df_warehouse_subset], ignore_index=True)
+
+    # Reorder columns
+    cols = ['SKU_ID', 'Mã cửa hàng', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
+            'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
+            'MOH', 'MOH Rating', 'Demand', 'Supply']
+    cols = [c for c in cols if c in location_profiles.columns]
+    location_profiles = location_profiles[cols]
+
+    return location_profiles
+
+
+def create_location_skc_profiles(
+    df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Tạo SKC Profiles chi tiết theo vị trí.
+    Aggregate theo (Mã cửa hàng, Mã màu).
+    """
+    # Get location SKU profiles first
+    location_sku = create_location_sku_profiles(df_stores, df_warehouse)
+
+    # Aggregate by (Mã cửa hàng, Mã màu)
+    skc_profiles = location_sku.groupby(['Mã cửa hàng', 'Mã màu']).agg({
+        'Mã hàng': 'first',
+        'Màu chi tiết': 'first',
+        'Thuộc tính': 'first',
+        'Phân loại': 'first',
+        'Tồn hiện tại': 'sum',
+        'Bán TB': 'sum',
+        'MOH': 'max',
+        'MOH Rating': 'first',
+        'Demand': 'sum',
+        'Supply': 'sum'
+    }).reset_index()
+
+    skc_profiles['Bán TB'] = skc_profiles['Bán TB'].round(1)
+
+    # Reorder columns
+    cols = ['Mã cửa hàng', 'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
+            'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply']
+    cols = [c for c in cols if c in skc_profiles.columns]
+    skc_profiles = skc_profiles[cols]
+
+    return skc_profiles
+
+
+def create_location_ma_hang_profiles(
+    df_stores: pd.DataFrame,
+    df_warehouse: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Tạo Mã hàng Profiles chi tiết theo vị trí.
+    Aggregate theo (Mã cửa hàng, Mã hàng).
+    """
+    # Get location SKU profiles first
+    location_sku = create_location_sku_profiles(df_stores, df_warehouse)
+
+    # Aggregate by (Mã cửa hàng, Mã hàng)
+    ma_hang_profiles = location_sku.groupby(['Mã cửa hàng', 'Mã hàng']).agg({
+        'Phân loại': 'first',
+        'Tồn hiện tại': 'sum',
+        'Bán TB': 'sum',
+        'MOH': 'max',
+        'MOH Rating': 'first',
+        'Demand': 'sum',
+        'Supply': 'sum'
+    }).reset_index()
+
+    ma_hang_profiles['Bán TB'] = ma_hang_profiles['Bán TB'].round(1)
+
+    # Reorder columns
+    cols = ['Mã cửa hàng', 'Mã hàng', 'Phân loại',
+            'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply']
+    cols = [c for c in cols if c in ma_hang_profiles.columns]
+    ma_hang_profiles = ma_hang_profiles[cols]
+
     return ma_hang_profiles
 
 
