@@ -7,17 +7,6 @@ env:
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version của image mới (ví dụ: v25081908).'
-        required: false
-      deploy_type:
-        description: 'Cập nhật source hoặc cả image'
-        required: true
-        type: choice
-        options:
-          - sync
-          - image
-        default: 'sync'
       site_name:
         description: 'Deploy cho site'
         required: true
@@ -26,6 +15,19 @@ on:
           - uat
         default: 'uat'
 
+      deploy_type:
+        description: 'Cập nhật source hoặc cả image'
+        required: true
+        type: choice
+        options:
+          - sync
+          - image
+        default: 'sync'
+
+      version:
+        description: 'Version của image mới (ví dụ: v25081908).'
+        required: false
+        
 jobs:
   sync-source-uat:
     if: ${{ inputs.deploy_type == 'sync' && inputs.site_name == 'uat' }}
