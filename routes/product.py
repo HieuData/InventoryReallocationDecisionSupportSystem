@@ -156,15 +156,43 @@ def get_location_product_ma_hang():
 
 @bp.route('/location_list')
 def get_location_list():
-    """Get list of all locations (stores + warehouse)"""
+    """Get list of all locations (stores + warehouse) with optional product filtering"""
     if 'df_stores' not in session or 'df_warehouse' not in session:
         return jsonify({'error': 'No data loaded'}), 400
 
     df_stores = pd.DataFrame(session['df_stores'])
+    df_warehouse = pd.DataFrame(session['df_warehouse'])
 
-    # Get unique store codes and add 'Kho'
-    store_list = sorted(df_stores['Mã cửa hàng'].unique().tolist())
-    location_list = store_list + ['Kho']
+    # Optional filters
+    ma_hang = request.args.get('ma_hang', 'all')
+    mau_chi_tiet = request.args.get('mau_chi_tiet', 'all')
+    size = request.args.get('size', 'all')
+
+    # Filter stores
+    df_s = df_stores
+    if ma_hang != 'all':
+        df_s = df_s[df_s['Mã hàng'] == ma_hang]
+    if mau_chi_tiet != 'all':
+        df_s = df_s[df_s['Màu chi tiết'] == mau_chi_tiet]
+    if size != 'all':
+        df_s = df_s[df_s['Size'] == size]
+
+    # Filter warehouse
+    df_w = df_warehouse
+    if ma_hang != 'all':
+        df_w = df_w[df_w['Mã hàng'] == ma_hang]
+    if mau_chi_tiet != 'all':
+        df_w = df_w[df_w['Màu chi tiết'] == mau_chi_tiet]
+    if size != 'all':
+        df_w = df_w[df_w['Size'] == size]
+
+    # Get unique store codes from filtered stores
+    store_list = sorted(df_s['Mã cửa hàng'].unique().tolist())
+    
+    # Check if warehouse has the item
+    location_list = store_list
+    if not df_w.empty and (df_w['Tồn hiện tại'] > 0).any():
+        location_list = location_list + ['Kho']
 
     return jsonify(location_list)
 
