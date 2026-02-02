@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // =========================================================================
     // INITIALIZATION
     // =========================================================================
@@ -12,7 +12,7 @@ $(document).ready(function() {
     // =========================================================================
     // TAB NAVIGATION
     // =========================================================================
-    $('.tab-btn').click(function() {
+    $('.tab-btn').click(function () {
         const tab = $(this).data('tab');
         $('.tab-btn').removeClass('active');
         $(this).addClass('active');
@@ -24,9 +24,9 @@ $(document).ready(function() {
             checkOptimizationStatus();
         }
     });
-    
+
     // Layer tabs
-    $(document).on('click', '.layer-btn', function() {
+    $(document).on('click', '.layer-btn', function () {
         const layer = $(this).data('layer');
         const container = $(this).closest('.table-container');
         container.find('.layer-btn').removeClass('active');
@@ -34,7 +34,7 @@ $(document).ready(function() {
         container.find('.layer-pane').removeClass('active');
         container.find('#layer-' + layer).addClass('active');
     });
-    
+
     // =========================================================================
     // DATA TABLES INITIALIZATION
     // =========================================================================
@@ -129,7 +129,7 @@ $(document).ready(function() {
                     previous: "Trước"
                 }
             },
-            drawCallback: function(settings) {
+            drawCallback: function (settings) {
                 // Adjust column widths to ensure header/body alignment
                 this.api().columns.adjust();
 
@@ -142,19 +142,19 @@ $(document).ready(function() {
             }
         });
 
-        setTimeout(function() {
+        setTimeout(function () {
             $('#' + tableId).DataTable().columns.adjust().draw();
         }, 100);
     }
-    
+
     // =========================================================================
     // API CALLS
     // =========================================================================
-    
+
     // Load Store Profiles
     function loadStoreProfiles() {
         const category = $('#category-filter-overview').val();
-        $.get('/api/overview/store_profiles', { category: category }, function(data) {
+        $.get('/api/overview/store_profiles', { category: category }, function (data) {
             if (data.error) {
                 $('#table-profiles').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -175,14 +175,14 @@ $(document).ready(function() {
             initDataTable('table-profiles', data, columns);
         });
     }
-    
+
     // Load SKC at Store
     function loadSKCAtStore(storeId) {
-        $.get('/api/overview/store_skc/' + storeId, function(data) {
+        $.get('/api/overview/store_skc/' + storeId, function (data) {
             if (data.error) return;
             const columnOrder = [
-                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Phân loại', 'Tồn hiện tại', 
-                'Số Size Có Tồn', 'Bán TB', 'Demand', 'Supply', 'MOH','MOH Rating', 
+                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Phân loại', 'Tồn hiện tại',
+                'Số Size Có Tồn', 'Bán TB', 'Demand', 'Supply', 'MOH', 'MOH Rating',
                 'Broken Index', 'IsBroken'
             ];
 
@@ -193,15 +193,15 @@ $(document).ready(function() {
             initDataTable('table-skc', data, columns);
         });
     }
-    
+
     // Load SKU at Store
     function loadSKUAtStore(storeId) {
-        $.get('/api/overview/store_sku/' + storeId, function(data) {
+        $.get('/api/overview/store_sku/' + storeId, function (data) {
             if (data.error) return;
             const columnOrder = [
-                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Size', 'SKU_ID', 'Phân loại', 
-                'Thuộc tính', 'Tồn hiện tại', 'Bán TB', 'Demand', 'Supply', 
-                'MOH','MOH Rating'
+                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Size', 'SKU_ID', 'Phân loại',
+                'Thuộc tính', 'Tồn hiện tại', 'Bán TB', 'Demand', 'Supply',
+                'MOH', 'MOH Rating'
             ];
 
             const availableKeys = Object.keys(data[0] || {});
@@ -214,11 +214,11 @@ $(document).ready(function() {
 
     // Load Mã hàng at Store
     function loadMaHangAtStore(storeId) {
-        $.get('/api/overview/store_ma_hang/' + storeId, function(data) {
+        $.get('/api/overview/store_ma_hang/' + storeId, function (data) {
             if (data.error) return;
             const columnOrder = [
-                'Mã hàng', 'Phân loại','Tồn hiện tại',
-                'Bán TB', 'Demand', 'Supply', 'MOH','MOH Rating', 'Broken Index'
+                'Mã hàng', 'Phân loại', 'Tồn hiện tại',
+                'Bán TB', 'Demand', 'Supply', 'MOH', 'MOH Rating', 'Broken Index'
             ];
 
             const availableKeys = Object.keys(data[0] || {});
@@ -231,7 +231,7 @@ $(document).ready(function() {
 
     // Load Warehouse Mã hàng
     function loadWarehouseMaHang() {
-        $.get('/api/overview/warehouse_ma_hang', function(data) {
+        $.get('/api/overview/warehouse_ma_hang', function (data) {
             if (data.error) {
                 $('#table-wh-ma-hang').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -250,7 +250,7 @@ $(document).ready(function() {
 
     // Load Warehouse SKC
     function loadWarehouseSKC() {
-        $.get('/api/overview/warehouse_skc', function(data) {
+        $.get('/api/overview/warehouse_skc', function (data) {
             if (data.error) {
                 $('#table-wh-skc').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -270,7 +270,7 @@ $(document).ready(function() {
     // Load Warehouse SKU by SKC
     function loadWarehouseSKU(skc) {
         console.log('loadWarehouseSKU called with SKC:', skc);
-        $.get('/api/overview/warehouse_sku/' + skc, function(data) {
+        $.get('/api/overview/warehouse_sku/' + skc, function (data) {
             console.log('Warehouse SKU API response:', data);
             if (data.error) {
                 console.error('Warehouse SKU error:', data.error);
@@ -278,7 +278,7 @@ $(document).ready(function() {
                 return;
             }
             const columnOrder = [
-                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Size','SKU_ID', 
+                'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Size', 'SKU_ID',
                 'Phân loại', 'Thuộc tính', 'Tồn hiện tại'
             ];
 
@@ -288,14 +288,14 @@ $(document).ready(function() {
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-wh-sku', data, columns);
             console.log('Warehouse SKU table updated');
-        }).fail(function(xhr, status, error) {
+        }).fail(function (xhr, status, error) {
             console.error('Warehouse SKU API call failed:', status, error, xhr.responseText);
         });
     }
-    
+
     // Load Broken by Store
     function loadBrokenByStore(storeId) {
-        $.get('/api/broken/by_store/' + storeId, function(data) {
+        $.get('/api/broken/by_store/' + storeId, function (data) {
             if (data.error) return;
             const columnOrder = [
                 'Mã cửa hàng', 'Mã màu', 'Tình trạng Gãy Size', 'Gãy Size'
@@ -307,8 +307,8 @@ $(document).ready(function() {
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-broken-store', data, columns);
         });
-        
-        $.get('/api/broken/skc_at_store/' + storeId, function(data) {
+
+        $.get('/api/broken/skc_at_store/' + storeId, function (data) {
             if (data.error) return;
             const columnOrder = [
                 'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
@@ -324,13 +324,13 @@ $(document).ready(function() {
             initDataTable('table-broken-skc-detail', data, columns);
         });
     }
-    
+
     // Load Reference section (Size Range + Top 3 Stores)
     function loadReference(skc) {
         console.log('loadReference called with SKC:', skc);
 
         // Load size range
-        $.get('/api/broken/size_range/' + skc, function(data) {
+        $.get('/api/broken/size_range/' + skc, function (data) {
             console.log('Size Range API response:', data);
             if (data.error) {
                 console.error('Size Range error:', data.error);
@@ -343,12 +343,12 @@ $(document).ready(function() {
             html += '<p><strong>Tổng Tồn hiện tại:</strong> ' + data.total_stock + '</p>';
             $('#size-range-display').html(html);
             console.log('Size Range updated');
-        }).fail(function(xhr, status, error) {
+        }).fail(function (xhr, status, error) {
             console.error('Size Range API call failed:', status, error, xhr.responseText);
         });
 
         // Load top stores
-        $.get('/api/broken/top_stores/' + skc, function(data) {
+        $.get('/api/broken/top_stores/' + skc, function (data) {
             console.log('Top Stores API response:', data);
             if (data.error) {
                 console.error('Top Stores error:', data.error);
@@ -362,7 +362,7 @@ $(document).ready(function() {
             const columns = [...orderedKeys, ...remainingKeys].map(k => ({ title: k, data: k }));
             initDataTable('table-top-stores', data, columns);
             console.log('Top Stores table updated');
-        }).fail(function(xhr, status, error) {
+        }).fail(function (xhr, status, error) {
             console.error('Top Stores API call failed:', status, error, xhr.responseText);
         });
     }
@@ -373,7 +373,7 @@ $(document).ready(function() {
 
         if (storeFilter === 'all') {
             // Load all stores broken by SKC
-            $.get('/api/broken/by_skc/' + skc, function(data) {
+            $.get('/api/broken/by_skc/' + skc, function (data) {
                 if (data.error) return;
                 const columnOrder = [
                     'Mã cửa hàng', 'Cửa hàng', 'Vùng miền', 'Mã màu',
@@ -388,7 +388,7 @@ $(document).ready(function() {
             });
         } else {
             // Load SKU at specific store for this SKC
-            $.get('/api/broken/sku_at_store/' + skc + '/' + storeFilter, function(data) {
+            $.get('/api/broken/sku_at_store/' + skc + '/' + storeFilter, function (data) {
                 if (data.length === 0) {
                     // No broken data at this store
                     $('#table-broken-by-skc').html('<p class="placeholder">Không có dữ liệu</p>');
@@ -411,50 +411,72 @@ $(document).ready(function() {
 
     // Load store list for dropdown
     function loadStoreList() {
-        $.get('/api/broken/store_list', function(data) {
+        $.get('/api/broken/store_list', function (data) {
             const select = $('#store-filter-broken');
             select.empty();
             select.append('<option value="all">Tất cả</option>');
-            data.forEach(function(store) {
+            data.forEach(function (store) {
                 select.append('<option value="' + store['Mã cửa hàng'] + '">' +
-                             store['Mã cửa hàng'] + ' - ' + store['Cửa hàng'] + '</option>');
+                    store['Mã cửa hàng'] + ' - ' + store['Cửa hàng'] + '</option>');
             });
         });
     }
 
-    // Load location list for all layers
-    function loadLocationList() {
-        fetch('/api/product/location_list')
+    /**
+     * Load location list for a specific layer with product filters
+     */
+    function loadLocationList(layer) {
+        const maHang = $('#filter-ma-hang-' + layer).val() || 'all';
+        let mauChiTiet = 'all';
+        let size = 'all';
+
+        if (layer === 'skc' || layer === 'sku') {
+            mauChiTiet = $('#filter-mau-chi-tiet-' + layer).val() || 'all';
+        }
+        if (layer === 'sku') {
+            size = $('#filter-size-' + layer).val() || 'all';
+        }
+
+        const params = new URLSearchParams({
+            ma_hang: maHang,
+            mau_chi_tiet: mauChiTiet,
+            size: size
+        });
+
+        fetch('/api/product/location_list?' + params.toString())
             .then(response => response.json())
             .then(locations => {
-                // Populate all location dropdowns
-                ['ma-hang', 'skc', 'sku'].forEach(layer => {
-                    const select = document.getElementById(`filter-location-${layer}`);
-                    if (select) {
-                        // Clear existing options except "Tất cả"
-                        select.innerHTML = '<option value="all">Tất cả</option>';
-                        
-                        // Add location options
-                        locations.forEach(location => {
-                            const option = document.createElement('option');
-                            option.value = location;
-                            option.textContent = location;
-                            select.appendChild(option);
-                        });
+                const select = document.getElementById(`filter-location-${layer}`);
+                if (select) {
+                    const currentVal = select.value;
+                    // Clear existing options except "Tất cả"
+                    select.innerHTML = '<option value="all">Tất cả</option>';
+
+                    // Add location options
+                    locations.forEach(location => {
+                        const option = document.createElement('option');
+                        option.value = location;
+                        option.textContent = location;
+                        select.appendChild(option);
+                    });
+
+                    // Restore selection if possible
+                    if (locations.includes(currentVal)) {
+                        select.value = currentVal;
                     }
-                });
+                }
             })
             .catch(error => {
-                console.error('Error loading location list:', error);
+                console.error(`Error loading location list for ${layer}:`, error);
             });
     }
 
     // =========================================================================
     // RUN OPTIMIZATION
     // =========================================================================
-    $('#btn-run-optimization').click(function() {
+    $('#btn-run-optimization').click(function () {
         // Check if data is loaded
-        $.get('/api/upload/status', function(status) {
+        $.get('/api/upload/status', function (status) {
             if (!status.has_data) {
                 alert('Vui lòng upload file CSV trước khi chạy optimization');
                 return;
@@ -474,7 +496,7 @@ $(document).ready(function() {
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(params),
-                success: function(response) {
+                success: function (response) {
                     $('#run-status').text('✅ Hoàn thành!');
                     $('#btn-run-optimization').prop('disabled', false);
                     updateDataStatus(true);
@@ -486,22 +508,22 @@ $(document).ready(function() {
                     loadSourceDestinations();
                     loadDestinationSources();
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $('#run-status').text('❌ Lỗi: ' + xhr.responseJSON?.error);
                     $('#btn-run-optimization').prop('disabled', false);
                 }
             });
         });
     });
-    
+
     function loadSummary(summary) {
         // Chỉ hiển thị các key này
-        const displayOrder = ['objective', 'status', 
-                            'total_demand_before', 'total_supply_before', 'total_quantity', 
-                            'total_transfers', 'store_to_store', 'warehouse_to_store',
-                            'unmet_rate'
-                        ];
-        
+        const displayOrder = ['objective', 'status',
+            'total_demand_before', 'total_supply_before', 'total_quantity',
+            'total_transfers', 'store_to_store', 'warehouse_to_store',
+            'unmet_rate'
+        ];
+
         let html = '';
         for (const key of displayOrder) {
             if (summary[key] !== undefined) {
@@ -514,9 +536,9 @@ $(document).ready(function() {
         $('#summary-content').html(html);
     }
 
-    
+
     function loadReallocationPlan() {
-        $.get('/api/reallocation/plan', function(data) {
+        $.get('/api/reallocation/plan', function (data) {
             if (data.error) return;
             const columns = Object.keys(data[0] || {}).map(k => ({ title: k, data: k }));
             initDataTable('table-reallocation', data, columns);
@@ -529,7 +551,7 @@ $(document).ready(function() {
 
     // Load Audit Panel 1: Warehouse Transfers
     function loadWarehouseTransfers() {
-        $.get('/api/reallocation/audit/warehouse_transfers', function(data) {
+        $.get('/api/reallocation/audit/warehouse_transfers', function (data) {
             if (data.error) {
                 $('#table-warehouse-transfers').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -538,7 +560,7 @@ $(document).ready(function() {
             // Define column order
             const columnOrder = [
                 'Nguồn', 'SKC', 'SKU_ID', 'Thuộc tính', 'Số lượng điều chuyển',
-                'Tồn tại Kho', 'Đích', 'Vùng miền Đích', 'Demand Đích', 
+                'Tồn tại Kho', 'Đích', 'Vùng miền Đích', 'Demand Đích',
                 'SKC Limit tại Đích', 'SKC Trưng bày tại Đích', 'Số SKC Đích nhận'
             ];
 
@@ -553,17 +575,17 @@ $(document).ready(function() {
 
     // Load Audit Panel 2: Store Transfers
     function loadStoreTransfers() {
-        $.get('/api/reallocation/audit/store_transfers', function(data) {
+        $.get('/api/reallocation/audit/store_transfers', function (data) {
             if (data.error) {
                 $('#table-store-transfers').html('<p class="placeholder">' + data.error + '</p>');
                 return;
             }
 
             const columnOrder = [
-                'Nguồn', 'Vùng miền Nguồn', 'SKC', 
-                'SKU_ID', 'Thuộc tính', 'Số lượng điều chuyển', 
+                'Nguồn', 'Vùng miền Nguồn', 'SKC',
+                'SKU_ID', 'Thuộc tính', 'Số lượng điều chuyển',
                 'Supply Nguồn', 'MOH tại Nguồn',
-                'Đích', 'Vùng miền Đích', 'Demand Đích', 
+                'Đích', 'Vùng miền Đích', 'Demand Đích',
                 'SKC Limit tại Đích', 'SKC Trưng bày tại Đích', 'Số SKC Đích nhận'
             ];
 
@@ -578,7 +600,7 @@ $(document).ready(function() {
 
     // Load Audit Panel 3A: Source → Destinations
     function loadSourceDestinations() {
-        $.get('/api/reallocation/audit/source_destinations', function(data) {
+        $.get('/api/reallocation/audit/source_destinations', function (data) {
             if (data.error) {
                 $('#table-source-destinations').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -595,7 +617,7 @@ $(document).ready(function() {
 
     // Load Audit Panel 3B: Destination ← Sources
     function loadDestinationSources() {
-        $.get('/api/reallocation/audit/destination_sources', function(data) {
+        $.get('/api/reallocation/audit/destination_sources', function (data) {
             if (data.error) {
                 $('#table-destination-sources').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -613,12 +635,12 @@ $(document).ready(function() {
     // =========================================================================
     // SENSITIVITY ANALYSIS
     // =========================================================================
-    $('.sens-btn').click(function() {
+    $('.sens-btn').click(function () {
         const sensId = $(this).data('sens');
         $('.sens-btn').removeClass('active');
         $(this).addClass('active');
 
-        $.get('/api/reallocation/sensitivity', function(response) {
+        $.get('/api/reallocation/sensitivity', function (response) {
             if (response.error) {
                 $('#sensitivity-content').html('<p class="placeholder">' + response.error + '</p>');
                 return;
@@ -689,10 +711,10 @@ $(document).ready(function() {
     // =========================================================================
     // DIAGNOSTICS
     // =========================================================================
-    $('#btn-check-unused').click(function() {
+    $('#btn-check-unused').click(function () {
         $('#diagnostics-content').html('<p class="placeholder">⏳ Loading...</p>');
 
-        $.get('/api/reallocation/diagnostics/unused_variables', function(data) {
+        $.get('/api/reallocation/diagnostics/unused_variables', function (data) {
             if (data.error) {
                 $('#diagnostics-content').html('<p class="placeholder">❌ ' + data.error + '</p>');
                 return;
@@ -714,15 +736,15 @@ $(document).ready(function() {
             $('#diagnostics-content').html(tableHtml);
             const columns = Object.keys(data[0]).map(k => ({ title: k, data: k }));
             initDataTable('table-diagnostics', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             $('#diagnostics-content').html('<p class="placeholder">❌ Error: ' + (xhr.responseJSON?.error || 'Unknown error') + '</p>');
         });
     });
 
-    $('#btn-check-violated').click(function() {
+    $('#btn-check-violated').click(function () {
         $('#diagnostics-content').html('<p class="placeholder">⏳ Loading...</p>');
 
-        $.get('/api/reallocation/diagnostics/violated_constraints', function(data) {
+        $.get('/api/reallocation/diagnostics/violated_constraints', function (data) {
             if (data.error) {
                 $('#diagnostics-content').html('<p class="placeholder">❌ ' + data.error + '</p>');
                 return;
@@ -744,12 +766,12 @@ $(document).ready(function() {
             $('#diagnostics-content').html(tableHtml);
             const columns = Object.keys(data[0]).map(k => ({ title: k, data: k }));
             initDataTable('table-diagnostics', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             $('#diagnostics-content').html('<p class="placeholder">❌ Error: ' + (xhr.responseJSON?.error || 'Unknown error') + '</p>');
         });
     });
 
-    $('#btn-export-lp').click(function() {
+    $('#btn-export-lp').click(function () {
         // Open download link
         window.open('/api/reallocation/diagnostics/export_lp', '_blank');
     });
@@ -758,7 +780,7 @@ $(document).ready(function() {
     // AFTER EFFECT
     // =========================================================================
     function checkOptimizationStatus() {
-        $.get('/api/after/check', function(response) {
+        $.get('/api/after/check', function (response) {
             if (response.optimization_done) {
                 $('#after-warning').hide();
                 $('#after-content').show();
@@ -769,12 +791,12 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     function loadAfterData() {
         const category = $('#category-filter-overview').val();
 
         // Load Store Profiles After
-        $.get('/api/after/store_profiles', { category: category }, function(data) {
+        $.get('/api/after/store_profiles', { category: category }, function (data) {
             if (data.error) return;
             const columnOrder = [
                 'Mã cửa hàng', 'Cửa hàng', 'Vùng miền', 'Diện tích',
@@ -791,17 +813,17 @@ $(document).ready(function() {
         });
 
         // Load Warehouse Mã hàng After
-        $.get('/api/after/warehouse_ma_hang', function(data) {
+        $.get('/api/after/warehouse_ma_hang', function (data) {
             if (data.error) return;
             const columns = Object.keys(data[0] || {}).map(k => ({ title: k, data: k }));
             initDataTable('table-wh-ma-hang-after', data, columns);
         });
 
         // Load Warehouse SKC After
-        $.get('/api/after/warehouse', function(data) {
+        $.get('/api/after/warehouse', function (data) {
             if (data.error) return;
             const columnOrder = [
-                'Mã hàng', 'Màu chi tiết', 'Mã màu', 
+                'Mã hàng', 'Màu chi tiết', 'Mã màu',
                 'Phân loại', 'Số Size', 'Tổng Tồn theo SKU'
             ];
 
@@ -815,14 +837,14 @@ $(document).ready(function() {
 
     // Load After Effect Store Mã hàng
     function loadMaHangAtStoreAfter(storeId) {
-        $.get('/api/after/store_ma_hang/' + storeId, function(data) {
+        $.get('/api/after/store_ma_hang/' + storeId, function (data) {
             if (data.error) {
                 $('#table-ma-hang-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
             }
             const columnOrder = [
                 'Mã hàng', 'Phân loại', 'Tồn hiện tại',
-                'Bán TB', 'Demand', 'Supply', 'MOH','MOH Rating', 'Broken Index'
+                'Bán TB', 'Demand', 'Supply', 'MOH', 'MOH Rating', 'Broken Index'
             ];
 
             const availableKeys = Object.keys(data[0] || {});
@@ -830,7 +852,7 @@ $(document).ready(function() {
                 .filter(col => availableKeys.includes(col))
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-ma-hang-after', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             console.error('Failed to load Mã hàng After:', xhr);
             $('#table-ma-hang-after').html(
                 '<p class="placeholder">Error loading data: ' +
@@ -841,14 +863,14 @@ $(document).ready(function() {
 
     // Load After Effect Store SKC
     function loadSKCAtStoreAfter(storeId) {
-        $.get('/api/after/store_skc/' + storeId, function(data) {
+        $.get('/api/after/store_skc/' + storeId, function (data) {
             if (data.error) {
                 $('#table-skc-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
             }
             const columnOrder = [
                 'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Phân loại', 'Tồn hiện tại',
-                'Số Size Có Tồn', 'Bán TB', 'Demand', 'Supply', 'MOH','MOH Rating',
+                'Số Size Có Tồn', 'Bán TB', 'Demand', 'Supply', 'MOH', 'MOH Rating',
                 'Broken Index'
             ];
 
@@ -857,7 +879,7 @@ $(document).ready(function() {
                 .filter(col => availableKeys.includes(col))
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-skc-after', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             console.error('Failed to load SKC After:', xhr);
             $('#table-skc-after').html(
                 '<p class="placeholder">Error: ' +
@@ -868,7 +890,7 @@ $(document).ready(function() {
 
     // Load After Effect Store SKU
     function loadSKUAtStoreAfter(storeId) {
-        $.get('/api/after/store_sku/' + storeId, function(data) {
+        $.get('/api/after/store_sku/' + storeId, function (data) {
             if (data.error) {
                 $('#table-sku-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -876,7 +898,7 @@ $(document).ready(function() {
             const columnOrder = [
                 'Mã hàng', 'Màu chi tiết', 'Mã màu', 'Size', 'SKU_ID', 'Phân loại',
                 'Thuộc tính', 'Tồn hiện tại', 'Bán TB', 'Demand', 'Supply',
-                'MOH','MOH Rating'
+                'MOH', 'MOH Rating'
             ];
 
             const availableKeys = Object.keys(data[0] || {});
@@ -884,7 +906,7 @@ $(document).ready(function() {
                 .filter(col => availableKeys.includes(col))
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-sku-after', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             console.error('Failed to load SKU After:', xhr);
             $('#table-sku-after').html(
                 '<p class="placeholder">Error: ' +
@@ -895,7 +917,7 @@ $(document).ready(function() {
 
     // Load After Effect Warehouse SKU
     function loadWarehouseSKUAfter(skc) {
-        $.get('/api/after/warehouse_sku/' + skc, function(data) {
+        $.get('/api/after/warehouse_sku/' + skc, function (data) {
             if (data.error) {
                 $('#table-wh-sku-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -917,7 +939,7 @@ $(document).ready(function() {
                 .filter(col => availableKeys.includes(col))
                 .map(k => ({ title: k, data: k }));
             initDataTable('table-wh-sku-after', data, columns);
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             console.error('Failed to load Warehouse SKU After:', xhr);
             $('#table-wh-sku-after').html(
                 '<p class="placeholder">Error: ' +
@@ -928,7 +950,7 @@ $(document).ready(function() {
 
     // Load After Effect Broken by Store
     function loadBrokenByStoreAfter(storeId) {
-        $.get('/api/after/broken_by_store/' + storeId, function(data) {
+        $.get('/api/after/broken_by_store/' + storeId, function (data) {
             if (data.error) {
                 $('#table-broken-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -947,7 +969,7 @@ $(document).ready(function() {
 
     // Load After Effect Broken by SKC
     function loadBrokenBySKCAfter(skc) {
-        $.get('/api/after/broken_by_skc/' + skc, function(data) {
+        $.get('/api/after/broken_by_skc/' + skc, function (data) {
             if (data.error) {
                 $('#table-broken-skc-after').html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -967,34 +989,34 @@ $(document).ready(function() {
             initDataTable('table-broken-skc-after', data, columns);
         });
     }
-    
+
     // =========================================================================
     // EVENT HANDLERS
     // =========================================================================
-    
+
     // Category filter change
-    $('#category-filter-overview').change(function() {
+    $('#category-filter-overview').change(function () {
         loadStoreProfiles();
         if ($('#after-content').is(':visible')) {
             loadAfterData();
         }
     });
-    
+
     // Store ID inputs
-    $('#store-id-skc').on('keypress', function(e) {
+    $('#store-id-skc').on('keypress', function (e) {
         if (e.which === 13) loadSKCAtStore($(this).val());
     });
-    
-    $('#store-id-sku').on('keypress', function(e) {
+
+    $('#store-id-sku').on('keypress', function (e) {
         if (e.which === 13) loadSKUAtStore($(this).val());
     });
-    
-    $('#store-id-broken').on('keypress', function(e) {
+
+    $('#store-id-broken').on('keypress', function (e) {
         if (e.which === 13) loadBrokenByStore($(this).val());
     });
-    
+
     // Reference section input (Size Range + Top 3 Stores)
-    $('#skc-input-reference').on('keypress', function(e) {
+    $('#skc-input-reference').on('keypress', function (e) {
         if (e.which === 13) {
             const skc = $(this).val();
             console.log('Reference input - Loading SKC:', skc);
@@ -1003,21 +1025,21 @@ $(document).ready(function() {
     });
 
     // SKC inputs
-    $('#skc-input-broken').on('keypress', function(e) {
+    $('#skc-input-broken').on('keypress', function (e) {
         if (e.which === 13) loadBrokenBySKC($(this).val());
     });
 
-    $('#skc-input-wh').on('keypress', function(e) {
+    $('#skc-input-wh').on('keypress', function (e) {
         if (e.which === 13) loadWarehouseSKU($(this).val());
     });
 
     // Mã hàng inputs
-    $('#store-id-ma-hang').on('keypress', function(e) {
+    $('#store-id-ma-hang').on('keypress', function (e) {
         if (e.which === 13) loadMaHangAtStore($(this).val());
     });
 
     // Store filter for Broken by SKC
-    $('#store-filter-broken').on('change', function() {
+    $('#store-filter-broken').on('change', function () {
         const skc = $('#skc-input-broken').val();
         if (skc) {
             loadBrokenBySKC(skc);
@@ -1025,26 +1047,26 @@ $(document).ready(function() {
     });
 
     // After Effect inputs
-    $('#store-id-ma-hang-after').on('keypress', function(e) {
+    $('#store-id-ma-hang-after').on('keypress', function (e) {
         if (e.which === 13) loadMaHangAtStoreAfter($(this).val());
     });
-    $('#store-id-skc-after').on('keypress', function(e) {
+    $('#store-id-skc-after').on('keypress', function (e) {
         if (e.which === 13) loadSKCAtStoreAfter($(this).val());
     });
 
-    $('#store-id-sku-after').on('keypress', function(e) {
+    $('#store-id-sku-after').on('keypress', function (e) {
         if (e.which === 13) loadSKUAtStoreAfter($(this).val());
     });
 
-    $('#skc-input-wh-after').on('keypress', function(e) {
+    $('#skc-input-wh-after').on('keypress', function (e) {
         if (e.which === 13) loadWarehouseSKUAfter($(this).val());
     });
 
-    $('#store-id-broken-after').on('keypress', function(e) {
+    $('#store-id-broken-after').on('keypress', function (e) {
         if (e.which === 13) loadBrokenByStoreAfter($(this).val());
     });
 
-    $('#skc-input-broken-after').on('keypress', function(e) {
+    $('#skc-input-broken-after').on('keypress', function (e) {
         if (e.which === 13) loadBrokenBySKCAfter($(this).val());
     });
 
@@ -1061,7 +1083,7 @@ $(document).ready(function() {
     // =========================================================================
     function checkDataStatus() {
         console.log('Checking data status...');
-        $.get('/api/upload/status', function(response) {
+        $.get('/api/upload/status', function (response) {
             console.log('Status response:', response);
             updateDataStatus(response.has_data);
             if (response.has_data) {
@@ -1079,13 +1101,13 @@ $(document).ready(function() {
             } else {
                 console.log('No data loaded yet');
             }
-        }).fail(function(xhr) {
+        }).fail(function (xhr) {
             console.error('Failed to check status:', xhr);
         });
     }
 
     // File upload handler
-    $('#store-files, #warehouse-files').change(function() {
+    $('#store-files, #warehouse-files').change(function () {
         const storeFiles = $('#store-files')[0].files;
         const warehouseFiles = $('#warehouse-files')[0].files;
 
@@ -1125,7 +1147,7 @@ $(document).ready(function() {
             data: formData,
             processData: false,
             contentType: false,
-            success: function(response) {
+            success: function (response) {
                 console.log('Upload success:', response);
                 updateDataStatus(true);
                 alert('Files uploaded successfully!\n' +
@@ -1144,7 +1166,7 @@ $(document).ready(function() {
                 loadProductFilters('skc');
                 loadProductFilters('sku');
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 console.error('Upload failed:', xhr);
                 updateDataStatus(false);
                 alert('Upload failed: ' + (xhr.responseJSON?.error || 'Unknown error'));
@@ -1155,7 +1177,7 @@ $(document).ready(function() {
     // =========================================================================
     // CLEAR DATA
     // =========================================================================
-    $('#btn-clear-data').click(function() {
+    $('#btn-clear-data').click(function () {
         if (!confirm('Bạn có chắc muốn xóa tất cả dữ liệu và files đã upload?\nHành động này không thể hoàn tác.')) {
             return;
         }
@@ -1166,7 +1188,7 @@ $(document).ready(function() {
         $.ajax({
             url: '/api/upload/clear',
             method: 'POST',
-            success: function(response) {
+            success: function (response) {
                 console.log('Clear success:', response);
                 updateDataStatus(false);
                 alert('Đã xóa thành công!\nFiles deleted: ' + response.files_deleted);
@@ -1178,7 +1200,7 @@ $(document).ready(function() {
                 // Reload page to clear all tables
                 location.reload();
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 console.error('Clear failed:', xhr);
                 alert('Clear failed: ' + (xhr.responseJSON?.error || 'Unknown error'));
                 checkDataStatus(); // Recheck status
@@ -1196,11 +1218,11 @@ $(document).ready(function() {
      */
     function loadProductFilters(layer) {
         // Load Mã hàng list
-        $.get('/api/product/ma_hang_list', function(data) {
+        $.get('/api/product/ma_hang_list', function (data) {
             const select = $('#filter-ma-hang-' + layer);
             select.empty();
             select.append('<option value="all">Tất cả</option>');
-            data.forEach(function(maHang) {
+            data.forEach(function (maHang) {
                 select.append('<option value="' + maHang + '">' + maHang + '</option>');
             });
         });
@@ -1224,11 +1246,11 @@ $(document).ready(function() {
      */
     function updateMauChiTietList(layer, maHang) {
         const url = '/api/product/mau_list' + (maHang !== 'all' ? '?ma_hang=' + maHang : '');
-        $.get(url, function(data) {
+        $.get(url, function (data) {
             const select = $('#filter-mau-chi-tiet-' + layer);
             select.empty();
             select.append('<option value="all">Tất cả</option>');
-            data.forEach(function(mau) {
+            data.forEach(function (mau) {
                 select.append('<option value="' + mau + '">' + mau + '</option>');
             });
         });
@@ -1244,11 +1266,11 @@ $(document).ready(function() {
         if (mauChiTiet !== 'all') params.push('mau_chi_tiet=' + mauChiTiet);
         url += params.join('&');
 
-        $.get(url, function(data) {
+        $.get(url, function (data) {
             const select = $('#filter-size-' + layer);
             select.empty();
             select.append('<option value="all">Tất cả</option>');
-            data.forEach(function(size) {
+            data.forEach(function (size) {
                 select.append('<option value="' + size + '">' + size + '</option>');
             });
         });
@@ -1264,24 +1286,14 @@ $(document).ready(function() {
 
         // Build endpoint URL based on layer and location selection
         let endpoint;
-        if (location === 'all') {
-            // Use system-wide aggregated APIs
-            if (layer === 'ma-hang') {
-                endpoint = '/api/product/ma_hang';
-            } else if (layer === 'skc') {
-                endpoint = '/api/product/skc';
-            } else {
-                endpoint = '/api/product/sku';
-            }
+        // Always use location-specific APIs for breakdown view
+        // When location is 'all', we get data from all locations to show breakdown
+        if (layer === 'ma-hang') {
+            endpoint = '/api/product/location_ma_hang';
+        } else if (layer === 'skc') {
+            endpoint = '/api/product/location_skc';
         } else {
-            // Use location-specific APIs
-            if (layer === 'ma-hang') {
-                endpoint = '/api/product/location_ma_hang';
-            } else if (layer === 'skc') {
-                endpoint = '/api/product/location_skc';
-            } else {
-                endpoint = '/api/product/location_sku';
-            }
+            endpoint = '/api/product/location_sku';
         }
 
         // Build query parameters
@@ -1291,7 +1303,7 @@ $(document).ready(function() {
 
         let url = endpoint + (params.length > 0 ? '?' + params.join('&') : '');
 
-        $.get(url, function(data) {
+        $.get(url, function (data) {
             if (data.error) {
                 $('#table-product-' + layer).html('<p class="placeholder">' + data.error + '</p>');
                 return;
@@ -1326,157 +1338,183 @@ $(document).ready(function() {
                 return;
             }
 
-            // Định nghĩa thứ tự cột mong muốn theo layer và location
+            // Calculate totals if showing all locations
+            if (location === 'all' && filteredData.length > 0) {
+                const totals = {
+                    'Mã cửa hàng': '<strong>TỔNG CỘNG</strong>',
+                    'Tồn hiện tại': 0,
+                    'Bán TB': 0,
+                    'Demand': 0,
+                    'Supply': 0
+                };
+
+                filteredData.forEach(row => {
+                    totals['Tồn hiện tại'] += parseFloat(row['Tồn hiện tại'] || 0);
+                    totals['Bán TB'] += parseFloat(row['Bán TB'] || 0);
+                    totals['Demand'] += parseFloat(row['Demand'] || 0);
+                    totals['Supply'] += parseFloat(row['Supply'] || 0);
+                });
+
+                // Round and format
+                totals['Bán TB'] = totals['Bán TB'].toFixed(1);
+
+                // For other columns, set empty strings or relevant indicators
+                const firstRow = filteredData[0];
+                Object.keys(firstRow).forEach(key => {
+                    if (totals[key] === undefined) {
+                        totals[key] = '';
+                    }
+                });
+
+                filteredData.push(totals);
+            }
+
+            // Định nghĩa thứ tự cột mong muốn theo layer
+            // Luôn hiển thị Mã cửa hàng để thấy breakdown theo vị trí
             let columnOrder;
             if (layer === 'skc') {
-                if (location === 'all') {
-                    // System-wide view: has 'Số CH có Tồn', no 'Mã cửa hàng'
-                    columnOrder = [
-                        'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
-                        'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply',
-                        'Tình trạng Gãy Size TB', 'Số CH Gãy Size', 'Số CH có Tồn'
-                    ];
-                } else {
-                    // Location-specific view: has 'Mã cửa hàng', no 'Số CH có Tồn'
-                    columnOrder = [
-                        'Mã cửa hàng', 'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Thuộc tính', 'Phân loại',
-                        'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply'
-                    ];
-                }
+                columnOrder = [
+                    'Mã màu', 'Mã hàng', 'Màu chi tiết', 'Mã cửa hàng', 'Thuộc tính', 'Phân loại',
+                    'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply'
+                ];
             } else if (layer === 'sku') {
-                if (location === 'all') {
-                    // System-wide view: has 'Số CH có Tồn', no 'Mã cửa hàng'
-                    columnOrder = [
-                        'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
-                        'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
-                        'MOH', 'MOH Rating', 'Demand', 'Supply', 'Số CH có Tồn'
-                    ];
-                } else {
-                    // Location-specific view: has 'Mã cửa hàng', no 'Số CH có Tồn'
-                    columnOrder = [
-                        'Mã cửa hàng', 'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size',
-                        'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
-                        'MOH', 'MOH Rating', 'Demand', 'Supply'
-                    ];
-                }
+                columnOrder = [
+                    'SKU_ID', 'Mã hàng', 'Mã màu', 'Màu chi tiết', 'Size', 'Mã cửa hàng',
+                    'Thuộc tính', 'Phân loại', 'Tồn hiện tại', 'Bán TB',
+                    'MOH', 'MOH Rating', 'Demand', 'Supply'
+                ];
             } else {
                 // ma-hang layer
-                if (location === 'all') {
-                    columnOrder = ['Mã hàng', 'MOH', 'MOH Rating', 'Tồn hiện tại', 'Bán TB'];
-                } else {
-                    columnOrder = ['Mã cửa hàng', 'Mã hàng', 'MOH', 'MOH Rating', 'Tồn hiện tại', 'Bán TB'];
-                }
+                columnOrder = ['Mã hàng', 'Mã cửa hàng', 'Phân loại', 'Tồn hiện tại', 'Bán TB', 'MOH', 'MOH Rating', 'Demand', 'Supply'];
             }
 
             const allKeys = Object.keys(filteredData[0]);
             const orderedKeys = columnOrder.filter(k => allKeys.includes(k));
             const remainingKeys = allKeys.filter(k => !columnOrder.includes(k));
             const finalKeys = [...orderedKeys, ...remainingKeys];
-            const columns = finalKeys.map(k => ({ title: k, data: k }));
+            const columns = finalKeys.map(k => ({
+                title: k,
+                data: k,
+                render: function (data, type, row) {
+                    // Make the total row bold
+                    if (row['Mã cửa hàng'] === '<strong>TỔNG CỘNG</strong>') {
+                        return '<strong>' + data + '</strong>';
+                    }
+                    return data;
+                }
+            }));
 
             initDataTable('table-product-' + layer, filteredData, columns);
         });
     }
 
     // Initialize filters and load data for all three layers on page load
-    loadLocationList();
+    loadLocationList('ma-hang');
+    loadLocationList('skc');
+    loadLocationList('sku');
     loadProductFilters('ma-hang');
     loadProductFilters('skc');
     loadProductFilters('sku');
 
 
     // Filter change handlers for SKC layer
-    $('#filter-ma-hang-skc').on('change', function() {
+    $('#filter-ma-hang-skc').on('change', function () {
         const maHang = $(this).val();
         updateMauChiTietList('skc', maHang);
         $('#filter-mau-chi-tiet-skc').val('all');
+        loadLocationList('skc'); // Refresh locations
         loadProductData('skc');
     });
 
-    $('#filter-mau-chi-tiet-skc').on('change', function() {
+    $('#filter-mau-chi-tiet-skc').on('change', function () {
+        loadLocationList('skc'); // Refresh locations
         loadProductData('skc');
     });
 
-    $('#filter-moh-skc').on('change', function() {
+    $('#filter-moh-skc').on('change', function () {
         loadProductData('skc');
     });
 
     // Filter change handlers for Mã hàng layer
-    $('#filter-ma-hang-ma-hang').on('change', function() {
+    $('#filter-ma-hang-ma-hang').on('change', function () {
+        loadLocationList('ma-hang'); // Refresh locations
         loadProductData('ma-hang');
     });
 
-    $('#filter-moh-ma-hang').on('change', function() {
+    $('#filter-moh-ma-hang').on('change', function () {
         loadProductData('ma-hang');
     });
 
     // Filter change handlers for SKU layer
-    $('#filter-ma-hang-sku').on('change', function() {
+    $('#filter-ma-hang-sku').on('change', function () {
         const maHang = $(this).val();
         updateMauChiTietList('sku', maHang);
         $('#filter-mau-chi-tiet-sku').val('all');
-        
+
         // Update Size list based on new Mã hàng
         const mauChiTiet = $('#filter-mau-chi-tiet-sku').val() || 'all';
         updateSizeList('sku', maHang, mauChiTiet);
         $('#filter-size-sku').val('all');
-        
+
+        loadLocationList('sku'); // Refresh locations
         loadProductData('sku');
     });
 
-    $('#filter-mau-chi-tiet-sku').on('change', function() {
+    $('#filter-mau-chi-tiet-sku').on('change', function () {
         const maHang = $('#filter-ma-hang-sku').val() || 'all';
         const mauChiTiet = $(this).val();
-        
+
         // Update Size list based on Mã hàng + Màu chi tiết
         updateSizeList('sku', maHang, mauChiTiet);
         $('#filter-size-sku').val('all');
-        
+
+        loadLocationList('sku'); // Refresh locations
         loadProductData('sku');
     });
 
-    $('#filter-size-sku').on('change', function() {
+    $('#filter-size-sku').on('change', function () {
+        loadLocationList('sku'); // Refresh locations
         loadProductData('sku');
     });
 
-    $('#filter-moh-sku').on('change', function() {
+    $('#filter-moh-sku').on('change', function () {
         loadProductData('sku');
     });
 
     // Location filter change handlers for all layers
-    $('#filter-location-ma-hang').on('change', function() {
+    $('#filter-location-ma-hang').on('change', function () {
         loadProductData('ma-hang');
     });
 
-    $('#filter-location-skc').on('change', function() {
+    $('#filter-location-skc').on('change', function () {
         loadProductData('skc');
     });
 
-    $('#filter-location-sku').on('change', function() {
+    $('#filter-location-sku').on('change', function () {
         loadProductData('sku');
     });
 
     // =========================================================================
     // EXPORT PRODUCT OVERVIEW SKU TO CSV
     // =========================================================================
-//     $('#btn-export-sku-csv').click(function() {
-//         // Get current filter values
-//         const maHang = $('#filter-ma-hang-sku').val() || 'all';
-//         const mauChiTiet = $('#filter-mau-chi-tiet-sku').val() || 'all';
-//         const size = $('#filter-size-sku').val() || 'all';
-//         const moh = $('#filter-moh-sku').val() || 'all';
+    //     $('#btn-export-sku-csv').click(function() {
+    //         // Get current filter values
+    //         const maHang = $('#filter-ma-hang-sku').val() || 'all';
+    //         const mauChiTiet = $('#filter-mau-chi-tiet-sku').val() || 'all';
+    //         const size = $('#filter-size-sku').val() || 'all';
+    //         const moh = $('#filter-moh-sku').val() || 'all';
 
-//         // Build URL with query parameters
-//         const params = new URLSearchParams({
-//             ma_hang: maHang,
-//             mau_chi_tiet: mauChiTiet,
-//             size: size,
-//             moh: moh
-//         });
+    //         // Build URL with query parameters
+    //         const params = new URLSearchParams({
+    //             ma_hang: maHang,
+    //             mau_chi_tiet: mauChiTiet,
+    //             size: size,
+    //             moh: moh
+    //         });
 
-//         // Open download link in new tab
-//         const exportUrl = '/api/product/export_sku_csv?' + params.toString();
-//         window.open(exportUrl, '_blank');
-//     });
+    //         // Open download link in new tab
+    //         const exportUrl = '/api/product/export_sku_csv?' + params.toString();
+    //         window.open(exportUrl, '_blank');
+    //     });
 
 });

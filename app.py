@@ -3,6 +3,9 @@ from flask_session import Session
 from routes import overview, broken, reallocation, after_effect, upload, product
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 
