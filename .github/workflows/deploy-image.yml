@@ -55,7 +55,7 @@ jobs:
           curl -X POST -H "Authorization: token ${{ secrets.REPO_PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/datcomlab/x-build/dispatches \
-          -d '{"client_payload": {"action": "deploy_success", "service": "${{ env.SERVICE_NAME }}", "version": "${{ inputs.version }}", "server_name": "${{ env.SERVER_NAME }}"}}'
+          -d '{"event_type": "deploy_success", "client_payload": {"action": "deploy_success", "service": "${{ env.SERVICE_NAME }}", "version": "${{ inputs.version }}", "server_name": "${{ env.SERVER_NAME }}"}}'
 
 
           
