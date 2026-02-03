@@ -3,6 +3,7 @@ name: Manual Build Tokyolife Inventory
 env:
   # CHECKOUT_PATH: ~ ${{ github.workspace }}
   REGSRV: dcsrv02.datcom.vn:5000
+  SERVICE_NAME: "tl-inventory"
   
 on:
   # push:
@@ -32,8 +33,8 @@ jobs:
       - name: Build Docker Image for Dev
         run: |
           cd ${{ github.workspace }}
-          docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
-          echo "Built image tl-inventory:${{ env.TOKYOLIFE_VERSION }}"
+          # docker build -f Dockerfile -t ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }} .
+          echo "Built image ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }}"
           
       - name: Create and Push Tag
         run: |
@@ -48,6 +49,13 @@ jobs:
       #     echo "Pushed image ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }} to local registry"
       # - name: Remove Local Dev image
       #   run: docker rmi ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
+
+      - name: Register to Dashboard
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.DEPLOY_ORG_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/datcomlab/${{ vars.DEPLOY_REPO_NAME }}/dispatches \
+          -d '{"event_type": "register_version", "client_payload": {"service": "${{ env.SERVICE_NAME }}", "version": "${{ env.TOKYOLIFE_VERSION }}"}}'
          
       # - name: Trigger Deploy Workflow for Dev
       #   uses: benc-uk/workflow-dispatch@v1.2.3 # search in marketplace
