@@ -18,7 +18,6 @@ jobs:
 
     steps:
       - name: Checkout code
-        # uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # lấy các tag cũ
@@ -33,7 +32,7 @@ jobs:
       - name: Build Docker Image for Dev
         run: |
           cd ${{ github.workspace }}
-          # docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
+          docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
           echo "Built image tl-inventory:${{ env.TOKYOLIFE_VERSION }}"
           
       - name: Create and Push Tag
@@ -43,8 +42,6 @@ jobs:
           TAG_NAME="dev-${{ env.TOKYOLIFE_VERSION }}"
           git tag $TAG_NAME
           git push origin $TAG_NAME
-        #env:
-        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Dùng token mặc định của GitHub
       # - name: Push Dev image to Local Registry
       #   run: |
       #     docker push ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
