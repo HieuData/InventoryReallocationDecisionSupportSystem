@@ -13,6 +13,8 @@ on:
 jobs:
   build-on-dcsrv02:
     runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01
+    permissions:
+      contents: write # Chỉ cấp quyền ghi cho duy nhất Job này
 
     steps:
       - name: Checkout code
