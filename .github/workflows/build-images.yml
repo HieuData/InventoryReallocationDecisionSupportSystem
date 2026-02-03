@@ -14,8 +14,8 @@ on:
 jobs:
   build-on-dcsrv02:
     runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01
-    permissions:
-      contents: write # Chỉ cấp quyền ghi cho duy nhất Job này
+    # permissions:
+    #   contents: write # Chỉ cấp quyền ghi cho duy nhất Job này
 
     steps:
       - name: Checkout code
@@ -36,13 +36,14 @@ jobs:
           # docker build -f Dockerfile -t ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }} .
           echo "Built image ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }}"
           
-      - name: Create and Push Tag
-        run: |
-          git config user.name "github-actions-dcsrv02"
-          git config user.email "buitienlap@gmail.com"
-          TAG_NAME="dev-${{ env.TOKYOLIFE_VERSION }}"
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
+      # - name: Create and Push Tag
+      #   run: |
+      #     git config user.name "github-actions-dcsrv02"
+      #     git config user.email "buitienlap@gmail.com"
+      #     TAG_NAME="dev-${{ env.TOKYOLIFE_VERSION }}"
+      #     git tag $TAG_NAME
+      #     git push origin $TAG_NAME
+          
       # - name: Push Dev image to Local Registry
       #   run: |
       #     docker push ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
@@ -52,9 +53,9 @@ jobs:
 
       - name: Register to Dashboard
         run: |
-          curl -X POST -H "Authorization: token ${{ secrets.DEPLOY_ORG_PAT }}" \
+          curl -X POST -H "Authorization: token ${{ secrets.REPO_PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/datcomlab/${{ vars.DEPLOY_REPO_NAME }}/dispatches \
+          https://api.github.com/repos/datcomlab/x-build/dispatches \
           -d '{"event_type": "register_version", "client_payload": {"service": "${{ env.SERVICE_NAME }}", "version": "${{ env.TOKYOLIFE_VERSION }}"}}'
          
       # - name: Trigger Deploy Workflow for Dev
