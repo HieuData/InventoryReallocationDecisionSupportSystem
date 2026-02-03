@@ -1,4 +1,4 @@
-name: Build Tokyolife Inventory
+name: Manual Build Tokyolife Inventory
 
 env:
   # CHECKOUT_PATH: ~ ${{ github.workspace }}
@@ -16,24 +16,32 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+        # uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # lấy các tag cũ
           
       - name: Generate version based on datetime
         run: |
           # Lấy timestamp theo định dạng vYYMMDDHH
           VERSION=v$(TZ=Asia/Ho_Chi_Minh date +%y%m%d%H)
           echo "Generated version: $VERSION"
-          # Lưu version vào env
           echo "TOKYOLIFE_VERSION=$VERSION" >> $GITHUB_ENV
-          # Tạo và push Git tag
-          # git tag $VERSION
-          # git push origin $VERSION
 
       - name: Build Docker Image for Dev
         run: |
           cd ${{ github.workspace }}
-          docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
+          # docker build -f Dockerfile -t tl-inventory:${{ env.TOKYOLIFE_VERSION }} .
           echo "Built image tl-inventory:${{ env.TOKYOLIFE_VERSION }}"
+          
+      - name: Create and Push Tag
+        run: |
+          # git config user.name "github-actions"
+          # git config user.email "github-actions@github.com"
+          git tag "Dev ${{ env.TOKYOLIFE_VERSION }}"
+          git push origin "Dev ${{ env.TOKYOLIFE_VERSION }}"
+        #env:
+        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Dùng token mặc định của GitHub
       # - name: Push Dev image to Local Registry
       #   run: |
       #     docker push ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
