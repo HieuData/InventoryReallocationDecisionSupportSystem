@@ -3,6 +3,8 @@ name: Deploy Tokyolife Inventory on dcsrv02
 env:
   COMPOSE_PATH: /opt/jobhula/project/tokyolife/inventory
   REGSRV: dcsrv02.datcom.vn:5000
+  SERVICE_NAME: "tl-inventory"
+  SERVER_NAME: "dcsrv02"
   
 on:
   workflow_dispatch:
@@ -47,6 +49,13 @@ jobs:
 
           echo "Containers after deployment:"
           docker-compose logs
+
+      - name: Callback to Update Status
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.REPO_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/datcomlab/x-build/dispatches \
+          -d '{"event_type": "deploy_success", "client_payload": {"service": "${{ env.SERVICE_NAME }}", "version": "${{ inputs.version }}", "server_name": "${{ env.SERVER_NAME }}"}}'
 
 
           
