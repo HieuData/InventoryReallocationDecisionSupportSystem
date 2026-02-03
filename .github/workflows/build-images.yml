@@ -36,10 +36,11 @@ jobs:
           
       - name: Create and Push Tag
         run: |
-          # git config user.name "github-actions"
-          # git config user.email "github-actions@github.com"
-          git tag "Dev ${{ env.TOKYOLIFE_VERSION }}"
-          git push origin "Dev ${{ env.TOKYOLIFE_VERSION }}"
+          git config user.name "github-actions-dcsrv02"
+          git config user.email "buitienlap@gmail.com"
+          TAG_NAME="dev-${{ env.TOKYOLIFE_VERSION }}"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
         #env:
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Dùng token mặc định của GitHub
       # - name: Push Dev image to Local Registry
