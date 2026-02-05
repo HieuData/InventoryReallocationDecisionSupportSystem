@@ -1,0 +1,62 @@
+name: Auto Sync source Tokyolife Inventory
+
+env:
+  COMPOSE_PATH: /opt/jobhula/project/tokyolife/inventory
+  REGSRV: dcsrv02.datcom.vn:5000
+  SERVICE_NAME: "tl-inventory"
+  SERVER_NAME: "dcsrv02"
+  
+on:
+  # push:
+  #  branches:
+  #    - main
+  workflow_dispatch:
+    inputs:
+      site_name:
+        description: 'Deploy cho site'
+        required: true
+        type: choice
+        options:
+          - uat
+        default: 'uat'
+
+jobs:
+  sync-source-uat:
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' && inputs.site_name == 'uat' }}
+    runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01/sdsrv02
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
+
+      - name: Get current version
+        run: |
+          cd ${{ env.COMPOSE_PATH }}/
+          if [ ! -f .env ]; then
+            echo "Error: .env file not found"
+            exit 1
+          fi
+          
+          CUR_VER=$(grep "IMAGE_VERSION_INVENTORY=" .env | cut -d'=' -f2)
+          echo "CURRENT_VERSION=$CUR_VER" >> $GITHUB_ENV
+          echo "Current version captured: $CUR_VER"
+          
+      - name: Sync source site uat
+        run: |
+          rsync -razv --exclude={".git",".github","__pycache__",".env",".env.example"} ${{ github.workspace }}/ ${{ env.COMPOSE_PATH }}/src/
+          # restart container
+          cd ${{ env.COMPOSE_PATH }}/
+          docker-compose -f docker-compose.yml down
+          docker-compose -f docker-compose.yml up -d
+
+          echo "Containers after deployment:"
+          docker-compose logs
+
+      - name: Callback to Update Status
+        if: success()
+        run: |
+          curl -X POST -H "Authorization: token ${{ secrets.REPO_PAT }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/datcomlab/x-build/dispatches \
+          -d '{"event_type": "deploy_success", "client_payload": {"action": "deploy_success", "service": "${{ env.SERVICE_NAME }}", "version": "${{ env.CURRENT_VERSION }}", "server_name": "${{ env.SERVER_NAME }}", "description": "Sync uat"}}'
+              
