@@ -1,4 +1,4 @@
-name: Deploy Tokyolife Inventory on dcsrv02
+name: Manual Deploy Tokyolife Inventory
 
 env:
   COMPOSE_PATH: /opt/jobhula/project/tokyolife/inventory
@@ -16,102 +16,83 @@ on:
         options:
           - uat
         default: 'uat'
-
-      deploy_type:
-        description: 'Cập nhật source hoặc cả image'
+        
+      image_name:
+        description: 'Tên image để deploy'
         required: true
         type: choice
         options:
-          - sync
-          - image
-        default: 'sync'
-
+          - tl-inventory
+        default: 'tl-inventory'
       version:
         description: 'Version của image mới (ví dụ: v25081908).'
-        required: false
+        required: true
         
 jobs:
-  sync-source-uat:
-    if: ${{ inputs.deploy_type == 'sync' && inputs.site_name == 'uat' }}
+  deploy-uat:
+    if: ${{ inputs.site_name == 'uat' }}
     runs-on: dcsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01/sdsrv02
 
     steps:
       - name: Checkout code
         uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
 
-      - name: Sync source site uat
+      - name: Determine version
+        id: get_version
         run: |
-          rsync -razv --exclude={".git",".github","__pycache__",".env",".env.example"} ${{ github.workspace }}/ ${{ env.COMPOSE_PATH }}/src/
-          # restart container
+          if [ -z "${{ inputs.version }}" ]; then
+            VERSION=$(docker images ${{ inputs.image_name }} --format "{{.Tag}}" | grep '^v[0-9]\{6,8\}' | sort -V | tail -1)
+            if [ -z "$VERSION" ]; then
+              echo "Error: No valid version found for ${{ inputs.image_name }}"
+              exit 1
+            fi
+          else
+            VERSION=${{ inputs.version }}
+          fi
+          echo "Using version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Deploy site UAT
+        run: |
           cd ${{ env.COMPOSE_PATH }}/
-          docker-compose -f docker-compose.yml down
-          docker-compose -f docker-compose.yml up -d
+          echo "Current containers before down:"
+          docker ps -a | grep ${{ inputs.image_name }} || echo "No running containers for ${{ inputs.image_name }}"
+          docker-compose down
+          echo "Docker-compose down completed."
+
+          echo "Update .env with new version"
+          if [ ! -f .env ]; then
+            echo "Error: .env file not found in ${{ env.COMPOSE_PATH }}/"
+            exit 1
+          fi
+          cat .env | grep IMAGE_VERSION  # Debug: old version
+          sed -i "s/IMAGE_VERSION_INVENTORY=.*/IMAGE_VERSION_INVENTORY=${{ steps.get_version.outputs.version }}/" .env
+          echo "Updated .env with IMAGE_VERSION_INVENTORY=${{ steps.get_version.outputs.version }}"
+          cat .env | grep IMAGE_VERSION  # Debug: up new version
+
+          echo "Docker-compose up"
+          docker-compose up -d
+          echo "Docker-compose up completed."
 
           echo "Containers after deployment:"
+          docker ps | grep ${{ steps.get_version.outputs.version }} || echo "No running containers for ${{ steps.get_version.outputs.version }}"
+          echo "Deployment log for ${{ inputs.image_name }}:${{ steps.get_version.outputs.version }} completed."
           docker-compose logs
 
       - name: Callback to Update Status
+        if: success()
         run: |
           curl -X POST -H "Authorization: token ${{ secrets.REPO_PAT }}" \
           -H "Accept: application/vnd.github.v3+json" \
           https://api.github.com/repos/datcomlab/x-build/dispatches \
-          -d '{"event_type": "deploy_success", "client_payload": {"action": "deploy_success", "service": "${{ env.SERVICE_NAME }}", "version": "${{ inputs.version }}", "server_name": "${{ env.SERVER_NAME }}"}}'
-
-
-          
-  #### Deploy laravelapi ####
-  # deploy-neu-laravelapi-on-sdsrv02:
-  #   if: ${{ inputs.image_name == 'tj-laravelapi' && inputs.site_name == 'neucv' }}
-  #   runs-on: sdsrv02  # Chạy trên runner local trên srv dcsrv01/sdsrv01/sdsrv02
-
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@refs/heads/main  # Pull từ (@refs/heads/main OR @refs/tags/ver) về folder _work
-
-  #     - name: Determine version
-  #       id: get_version
-  #       run: |
-  #         if [ -z "${{ inputs.version }}" ]; then
-  #           VERSION=$(docker images ${{ inputs.image_name }} --format "{{.Tag}}" | grep '^v[0-9]\{6,8\}' | sort -V | tail -1)
-  #           if [ -z "$VERSION" ]; then
-  #             echo "Error: No valid version found for ${{ inputs.image_name }}"
-  #             exit 1
-  #           fi
-  #         else
-  #           VERSION=${{ inputs.version }}
-  #         fi
-  #         echo "Using version: $VERSION"
-  #         echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-  #     - name: Pull image from Registry
-  #       run: |
-  #         echo "Pull laravelapi image"
-  #         docker pull ${{ env.REGSRV }}/${{ inputs.image_name }}:${{ steps.get_version.outputs.version }}
-          
-  #     - name: Deploy site neucv
-  #       if: ${{ inputs.site_name == 'neucv' }}
-  #       run: |
-  #         cd ${{ env.COMPOSE_PATH }}/neu-laravelapi
-  #         echo "Current containers before down:"
-  #         docker ps -a | grep ${{ inputs.image_name }} || echo "No running containers for ${{ inputs.image_name }}"
-  #         docker-compose down
-  #         echo "Docker-compose down completed."
-
-  #         echo "Update .env with new version"
-  #         if [ ! -f .env ]; then
-  #           echo "Error: .env file not found in ${{ env.COMPOSE_PATH }}/neu-laravelapi"
-  #           exit 1
-  #         fi
-  #         cat .env | grep IMAGE_VERSION  # Debug: old version
-  #         sed -i "s/IMAGE_VERSION_LARAVELAPI=.*/IMAGE_VERSION_LARAVELAPI=${{ steps.get_version.outputs.version }}/" .env
-  #         echo "Updated .env with IMAGE_VERSION_LARAVELAPI=${{ steps.get_version.outputs.version }}"
-  #         cat .env | grep IMAGE_VERSION  # Debug: up new version
-
-  #         echo "Docker-compose up"
-  #         docker-compose up -d
-  #         echo "Docker-compose up completed."
-
-  #         echo "Containers after deployment:"
-  #         docker ps | grep ${{ steps.get_version.outputs.version }} || echo "No running containers for ${{ steps.get_version.outputs.version }}"
-  #         echo "Deployment log for ${{ inputs.image_name }}:${{ steps.get_version.outputs.version }} completed."
-  #         docker-compose logs
+          -d '{
+            "event_type": "deploy_success",
+            "client_payload": {
+              "action": "deploy_success",
+              "service": "${{ inputs.image_name }}",
+              "version": "${{ steps.get_version.outputs.version }}",
+              "server_name": "${{ env.SERVER_NAME }}",
+              "description": "${{ inputs.site_name }}"
+            }
+          }'
+       
