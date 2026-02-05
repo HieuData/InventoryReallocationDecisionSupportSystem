@@ -38,7 +38,7 @@ jobs:
       - name: Build Docker Image for Dev
         run: |
           cd ${{ github.workspace }}
-          # docker build -f Dockerfile -t ${{ env.FULL_IMAGE_NAME }} .
+          docker build -f Dockerfile -t ${{ env.FULL_IMAGE_NAME }} .
           echo "Built image ${{ env.FULL_IMAGE_NAME }}"
       - name: Push Dev image to Local Registry
         run: |
