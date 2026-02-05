@@ -30,13 +30,21 @@ jobs:
           VERSION=v$(TZ=Asia/Ho_Chi_Minh date +%y%m%d%H)
           echo "Generated version: $VERSION"
           echo "TOKYOLIFE_VERSION=$VERSION" >> $GITHUB_ENV
+          IMAGE_TAG="${{ env.REGSRV }}/${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }}"
+          echo "FULL_IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Build Docker Image for Dev
         run: |
           cd ${{ github.workspace }}
-          # docker build -f Dockerfile -t ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }} .
-          echo "Built image ${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }}"
-          
+          # docker build -f Dockerfile -t ${{ env.FULL_IMAGE_NAME }} .
+          echo "Built image ${{ env.FULL_IMAGE_NAME }}"
+      - name: Push Dev image to Local Registry
+        run: |
+          docker push ${{ env.FULL_IMAGE_NAME }}
+          echo "Pushed image ${{ env.FULL_IMAGE_NAME }} to local registry"
+      - name: Remove Local Dev image
+        run: docker rmi ${{ env.FULL_IMAGE_NAME }}
+      
       # - name: Create and Push Tag
       #   run: |
       #     git config user.name "github-actions-dcsrv02"
@@ -45,12 +53,7 @@ jobs:
       #     git tag $TAG_NAME
       #     git push origin $TAG_NAME
           
-      # - name: Push Dev image to Local Registry
-      #   run: |
-      #     docker push ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
-      #     echo "Pushed image ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }} to local registry"
-      # - name: Remove Local Dev image
-      #   run: docker rmi ${{ env.REGSRV }}/tl-inventory:${{ env.TOKYOLIFE_VERSION }}
+
 
       - name: Register to Dashboard
         run: |
@@ -59,17 +62,17 @@ jobs:
           https://api.github.com/repos/datcomlab/x-build/dispatches \
           -d '{"event_type": "register_version", "client_payload": {"action": "register_version", "service": "${{ env.SERVICE_NAME }}", "version": "${{ env.TOKYOLIFE_VERSION }}", "server_name": "${{ env.SERVER_NAME }}"}}'
          
-      # - name: Trigger Deploy Workflow for Dev
-      #   uses: benc-uk/workflow-dispatch@v1.2.3 # search in marketplace
-      #   with:
-      #     workflow: deploy-image.yml
-      #     token: ${{ secrets.REPO_PAT }}
-      #     ref: main
-      #     inputs: |
-      #       {
-      #         "version": "${{ env.TOKYOLIFE_VERSION }}",
-      #         "image_name": "tl-inventory",
-      #         "site_name": "uat"
-      #       }
+      - name: Trigger Deploy Workflow for Dev
+        uses: benc-uk/workflow-dispatch@v1.2.3 # search in marketplace
+        with:
+          workflow: deploy-image.yml
+          token: ${{ secrets.REPO_PAT }}
+          ref: main
+          inputs: |
+            {
+              "version": "${{ env.TOKYOLIFE_VERSION }}",
+              "image_name": "${{ env.SERVICE_NAME }}",
+              "site_name": "uat"
+            }
 
             
