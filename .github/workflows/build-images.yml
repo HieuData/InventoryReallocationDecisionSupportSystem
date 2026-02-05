@@ -30,8 +30,10 @@ jobs:
           VERSION=v$(TZ=Asia/Ho_Chi_Minh date +%y%m%d%H)
           echo "Generated version: $VERSION"
           echo "TOKYOLIFE_VERSION=$VERSION" >> $GITHUB_ENV
-          IMAGE_TAG="${{ env.REGSRV }}/${{ env.SERVICE_NAME }}:${{ env.TOKYOLIFE_VERSION }}"
+
+          IMAGE_TAG="${{ env.REGSRV }}/${{ env.SERVICE_NAME }}:$VERSION"
           echo "FULL_IMAGE_NAME=$IMAGE_TAG" >> $GITHUB_ENV
+          echo "Full Image Name created: $IMAGE_TAG"
 
       - name: Build Docker Image for Dev
         run: |
